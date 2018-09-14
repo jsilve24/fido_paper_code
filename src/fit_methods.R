@@ -45,7 +45,7 @@ new_mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset){
 verify.mfit <- function(m, ...){
   stopifnot(is.integer(m$N), is.integer(m$D), is.integer(m$Q), is.integer(m$iter))
   N <- m$N; D <- m$D; Q <- m$Q; iter <- m$iter
-  check_dims(m$Lambda, c(D-1, N, iter), "Lambda")
+  check_dims(m$Lambda, c(D-1, Q, iter), "Lambda")
   check_dims(m$Sigma, c(D-1, D-1, iter), "Sigma")
   verify.mdataset(mdataset)
 }
