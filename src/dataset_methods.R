@@ -16,7 +16,7 @@ require(driver)
 #' they are not however used for the simulation - only Lambda_true and Sigma_true are
 #' @examples 
 #' N <- 10L
-#' Q <- 3L
+#' Q <- 4L
 #' D <- 5L
 #' size <- 1000:(1000+N)
 #' X <- matrix(rnorm(Q*N), Q, N)

@@ -25,7 +25,8 @@ mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset){
 
 # Keep internal (don't call directly from other code)
 new_mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset){
-  m <- list(N=N, D=D, Q=Q, iter=iter, Lambda=Lambda, Sigma=Sigma)
+  m <- list(N=N, D=D, Q=Q, iter=iter, Lambda=Lambda, Sigma=Sigma, 
+            mdataset=mdataset)
   class(m) <- c("mfit", "list")
   return(m)
 }
@@ -47,5 +48,5 @@ verify.mfit <- function(m, ...){
   N <- m$N; D <- m$D; Q <- m$Q; iter <- m$iter
   check_dims(m$Lambda, c(D-1, Q, iter), "Lambda")
   check_dims(m$Sigma, c(D-1, D-1, iter), "Sigma")
-  verify.mdataset(mdataset)
+  verify.mdataset(m$mdataset)
 }
