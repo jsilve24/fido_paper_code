@@ -38,5 +38,5 @@ mean(foo2[-length(foo2)]) # of this vector ... weird
 fit1 <- fit_mstan(sim, parameterization="collapsed",  ret_stanfit=FALSE)
 fit2 <- fit_mstan(sim, parameterization = "uncollapsed", ret_stanfit=FALSE)
 mfits <- list("stan_collapsed"=fit1, "stan_uncollapsed"=fit2)
-plot_lambda(mfits)
+plot_lambda(mfits, Lambda_true=Lambda_true)
 
