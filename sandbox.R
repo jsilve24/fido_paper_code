@@ -1,3 +1,4 @@
+
 require(rstan)
 require(mongrel)
 source("src/fit_methods.R")
@@ -5,6 +6,9 @@ source("src/dataset_methods.R")
 source("src/utils.R")
 source("src/fit_stan.R")
 source("src/plotting.R")
+
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
 
 
 
