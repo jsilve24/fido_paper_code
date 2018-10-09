@@ -28,7 +28,7 @@ transformed data{
   matrix[N, N] I = diag_matrix(rep_vector(1, N));
   matrix[N, N] A = inverse_spd(I + XT*Gamma*XT');
   matrix[D-1, N] XTB0T = (XT*ThetaT)';
-  real upsilonN = (upsilon+N-D-2)/2; // updated from (upsilon+N)/2
+  real upsilonN = (upsilon+N+D-2)/2; // updated from (upsilon+N)/2
   // For Generated Quantities Block
   real nuN = upsilon+N;
   matrix[Q, Q] Lambda0 = inverse_spd(Gamma);
@@ -40,7 +40,8 @@ transformed data{
   }
 }
 parameters {
-  matrix<lower=-30, upper=30>[D-1, N] eta;
+  //matrix<lower=-30, upper=30>[D-1, N] eta;
+  matrix[D-1, N] eta;
 }
 transformed parameters {
   matrix[D-1, N] E_T;

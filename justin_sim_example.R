@@ -10,11 +10,27 @@ source("src/fit_mongrel.R")
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
+# If you make changes to mongrel, you can load them with devtools 
+# without having to install - example below. 
+# devtools::load_all("~/Research/src/mongrel")
+
+# helper functions --------------------------------------------------------
+
+#' function to calculate hessian for model at a given eta 
+#' @param eta (D-1) x N matrix 
+#' @details uses hessMongrelCollapsed function of mongrel 
+hessMC <- function(mdataset, eta){
+  X <- mdataset$X
+  A <- solve(diag(mdataset$N)+ t(X)%*%mdataset$Gamma%*%X)
+  hessMongrelCollapsed(mdataset$Y, mdataset$upsilon, 
+                       mdataset$Theta%*%X, solve(mdataset$Xi), 
+                       A, eta)
+}
 
 
 # simulation --------------------------------------------------------------
 
-N <- 50L
+N <- 20L
 Q <- 4L
 D <- 15L
 X <- rbind(1, matrix(rnorm((Q-1)*N), Q-1, N))
@@ -22,7 +38,7 @@ Lambda_true <- matrix(rnorm((D-1)*Q), D-1, Q)
 Sigma_true <- solve(rWishart(1, D+10, diag(D-1))[,,1])
 
 # Add a bit of sparsity by changing mean of intercept
-Lambda_true[,1] <- seq(0, (D-1)*.3, length=D-1) + Lambda_true[,1]
+#Lambda_true[,1] <- seq(0, (D-1)*.3, length=D-1) + Lambda_true[,1]
 
 
 
@@ -45,18 +61,26 @@ sum(sim_data$Y==0)/prod(dim(sim_data$Y))
 # analysis ----------------------------------------------------------------
 
 fit.sc <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE)
-fit.mongrel1 <- fit_mongrel(sim_data)
-fit.mongrel2 <- fit_mongrel(sim_data)
-fit.mongrel3 <- fit_mongrel(sim_data)
-fit.mongrel4 <- fit_mongrel(sim_data)
+# fit.sc2 <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE, 
+#                     iter=5000)
+fit.sco <- fit_mstan_optim(sim_data, hessian=TRUE)
+fit.sco2 <- fit_mstan_optim(sim_data, hessian=TRUE, ret_stanfit = TRUE)
+#fit.mongrel1 <- fit_mongrel(sim_data, ret_mongrelfit = TRUE)
+fit.mongrel2 <- fit_mongrel(sim_data, decomposition = "eigen")
+
+
+
+
+# Check stan hessian against our hessian calculated at Stan's MAP estimate
+fit.sco2$hessian[1:5,1:5]
+hess.mongrel2 <- hessMC(sim_data, fit.sco2$par$eta)
+hess.mongrel2[1:5,1:5]
 
 # plotting ----------------------------------------------------------------
 
-plot_lambda(list("sc"=fit.sc, 
-                 "me1"=fit.mongrel1, 
-                 "me2"=fit.mongrel2, 
-                 "me3"=fit.mongrel3, 
-                 "me4"=fit.mongrel4), 
-            Lambda_true = Lambda_true)
+plot_lambda(list("sc1"=fit.sc, 
+                 "sco"=fit.sco, 
+                 "me2"=fit.mongrel2), 
+            Lambda_true=Lambda_true)
 
 
