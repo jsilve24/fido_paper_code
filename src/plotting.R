@@ -49,7 +49,7 @@ plot_lambda <- function(mfits, Lambda_true=NULL){
 #' 
 #' @details 
 #' Covariates are the horizontal facets, other things are labeled
-plot_lambda <- function(mfits, Eta_true=NULL){
+plot_eta <- function(mfits, Eta_true=NULL){
   if (!is.null(Eta_true)){ 
     lt <- gather_array(Eta_true, value, coord, covariate)
   }

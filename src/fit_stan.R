@@ -45,15 +45,16 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
                     "collapsed" = "src/rel_lm_collapsed.stan", 
                     "uncollapsed" = "src/rel_lm_uncollapsed.stan")
   fit <- stan(modcode, data=mdataset, chains=chains, 
-              init=init, iter=iter, pars=c("B", "Sigma"),  ...)
+              init=init, iter=iter, pars=c("B", "Sigma", "eta"),  ...)
   if (ret_stanfit) return(fit)
-  pars <- rstan::extract(fit, c("B", "Sigma"))
+  pars <- rstan::extract(fit, c("B", "Sigma", "eta"))
   rm(fit) # free up memory
   
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=aperm(pars$B, c(2,3,1)), 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
-            mdataset=mdataset)
+            mdataset=mdataset, 
+            Eta = aperm(pars$eta, c(2, 3, 1)))
   
   return(m)
 }
@@ -92,12 +93,13 @@ fit_mstan_optim <- function(mdataset, iter=2000,
   fit$theta_tilde <- pars
   
   if (ret_stanfit) return(fit)
-  pars <- pars[c("B", "Sigma")]
+  pars <- pars[c("B", "Sigma", "eta")]
   
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=aperm(pars$B, c(2,3,1)), 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
-            mdataset=mdataset)
+            mdataset=mdataset, 
+            Eta = aperm(pars$eta, c(2, 3, 1)))
   if (hessian) m$hessian <- fit$hessian
   return(m)
 }
