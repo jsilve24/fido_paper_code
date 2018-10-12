@@ -68,26 +68,51 @@ parameters {
   matrix[D-1, Q] B;
   matrix[D-1, N] eta;
   // for bartlet decomposition of wishart (following wikipedia notation)
-  cov_matrix[D-1] Sigma;
+  vector<lower=0>[D-1] c;
+  vector[noffdiag] n;
 }
 transformed parameters {
   simplex[D] pi[N];
-  real Sigma_logdet = log_determinant(Sigma);
-  cov_matrix[D-1] SigmaInv = inverse_spd(Sigma);
+  cholesky_factor_cov[D-1] LSigmaInv;
+  
+  // Bartlet Decomposition
+  { matrix[D-1, D-1] W;
+    W = diag_matrix(sqrt(c));
+    if (D-1 > 1){
+      int pos=1;
+      for (j in 1:(D-1)){
+        for (i in (j+1):(D-1)){
+          W[i,j] = n[pos];
+          pos=pos+1;
+        }
+      }  
+      LSigmaInv = W;
+    }
+    LSigmaInv = LXiInv * LSigmaInv;  
+  }
+  
   // Multinomial
   for (j in 1:N)
     pi[j] = softmax_id(eta[,j]);
 }
 model {
+  real Sigma_logdet = 1/(prod(c)^2);
   // Priors 
-  Sigma ~ inv_wishart(upsilon, Xi);
+  n ~ normal(0,1);
+  for (i in 1:(D-1)){
+    c[i] ~ chi_square(upsilon - i + 1);
+  }
+  {matrix[D-1, D-1] SigmaInv = tcrossprod(LSigmaInv);
    target += matrix_normal_precomputed_lpdf(B | Theta, SigmaInv, GammaInv, 
                                                 Sigma_logdet, Gamma_logdet);
    target += matrix_normal_precomputed_lpdf(eta | B*X, SigmaInv, IN, 
-                                               Sigma_logdet, 1.0);
+                                                 Sigma_logdet, 1.0);
+  }
  
   for(i in 1:N)
     Y[,i] ~ multinomial(pi[i]);
 }
 generated quantities {
+  cov_matrix[D-1] Sigma;
+  Sigma = inverse_spd(tcrossprod(LSigmaInv));
 }

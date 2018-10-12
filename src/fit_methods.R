@@ -48,5 +48,5 @@ verify.mfit <- function(m, ...){
   N <- m$N; D <- m$D; Q <- m$Q; iter <- m$iter
   check_dims(m$Lambda, c(D-1, Q, iter), "Lambda")
   check_dims(m$Sigma, c(D-1, D-1, iter), "Sigma")
-  verify.mdataset(m$mdataset)
+  if(!is.null(m$mdataset)) verify.mdataset(m$mdataset)
 }

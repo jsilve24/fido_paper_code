@@ -13,7 +13,7 @@ rstan_options(auto_write = TRUE)
 
 # If you make changes to mongrel, you can load them with devtools 
 # without having to install - example below. 
-# devtools::load_all("~/Research/src/mongrel")
+#devtools::load_all("~/Research/src/mongrel")
 
 # helper functions --------------------------------------------------------
 
@@ -36,12 +36,58 @@ lap_approx <- function(n, mu, Sigma){
   X <- sweep(X, 1, mu, FUN=`+`)
 }
 
+# # # DEBUGGING
+# fit.foo <- fit.mongrel2
+# #eta <- fit.foo$Eta
+# X <- fit.foo$mdataset$X
+# upsilon <- fit.foo$mdataset$upsilon
+# Theta <- fit.foo$mdataset$Theta
+# Xi <- fit.foo$mdataset$Xi
+# Gamma <- fit.foo$mdataset$Gamma
+# 
+# 
+# fix_stan <- function(x) aperm(x, c(2,3,1))
+# eta <- fix_stan(rstan::extract(fit.sc2, pars="eta")$eta)
+# BN <- fix_stan(rstan::extract(fit.sc2, pars="BN")$BN)
+# VN <- fix_stan(rstan::extract(fit.sc2, pars="VN")$VN)
+# SigmaStan <- fix_stan(rstan::extract(fit.sc2, pars="Sigma")$Sigma)
+# 
+# 
+# # #
+
+#' @param eta as an (D-1 x N x iter) array
+uncollapse <- function(eta, X, upsilon, Theta, Xi, Gamma){
+  d <- dim(eta)
+  iter <- as.integer(d[3])
+  N <- as.integer(d[2])
+  D <- as.integer(d[1] + 1)
+  Q <- as.integer(nrow(Gamma))
+  Lambda <- array(0, c(D-1, Q, iter))
+  Sigma <- array(0, c(D-1, D-1, iter))
+  
+  upsilonN <- upsilon+N
+  GammaInv <- solve(Gamma)
+  GammaN <- solve(tcrossprod(X)+ GammaInv)
+  for (i in 1:iter){
+    LambdaN <- (eta[,,i] %*% t(X) + Theta %*% GammaInv) %*% GammaN
+    EN <- eta[,,i] - LambdaN %*% X
+    Delta <- LambdaN - Theta
+    XiN <- Xi + tcrossprod(EN) + Delta %*% solve(Gamma) %*% t(Delta)
+    Sigma[,,i] <- MCMCpack::riwish(upsilonN, XiN)#solve(rWishart(1, upsilonN, XiN)[,,1])
+    Z <- matrix(rnorm((D-1)*Q), D-1, Q)
+    Lambda[,,i] <- LambdaN + t(chol(Sigma[,,i]))%*%Z%*%chol(GammaN)
+  }
+  m <- mfit(N, D, Q, iter, Lambda, Sigma, NULL)
+  m$Eta <- eta
+  return(m)
+}
+
 
 # simulation --------------------------------------------------------------
 
-N <- 7L
-Q <- 4L
-D <- 5L
+N <- 15L
+Q <- 8L
+D <- 12L
 X <- rbind(1, matrix(rnorm((Q-1)*N), Q-1, N))
 Lambda_true <- matrix(rnorm((D-1)*Q), D-1, Q)
 Sigma_true <- solve(rWishart(1, D+10, diag(D-1))[,,1])
@@ -70,16 +116,17 @@ sum(sim_data$Y==0)/prod(dim(sim_data$Y))
 # analysis ----------------------------------------------------------------
 
 fit.sc <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE)
+fit.sc2 <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=TRUE, 
+                     ret_all=TRUE)
+fit.sc3 <- fit_mstan(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, 
+                    iter = 3000)
+
 # fit.sc2 <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE, 
 #                     iter=5000)
 fit.sco <- fit_mstan_optim(sim_data, hessian=TRUE)
 fit.sco2 <- fit_mstan_optim(sim_data, hessian=TRUE, ret_stanfit = TRUE)
 #fit.mongrel1 <- fit_mongrel(sim_data, ret_mongrelfit = TRUE)
 fit.mongrel2 <- fit_mongrel(sim_data, decomposition = "eigen")
-
-
-
-
 
 
 # Check stan hessian against our hessian calculated at Stan's MAP estimate
@@ -90,7 +137,16 @@ hess.mongrel2[22:28,22:28]
 fit.foo <- fit.mongrel2
 fit.foo$Eta <- lap_approx(2000, c(fit.sco2$par$eta), solve(-hess.mongrel2))
 dim(fit.foo$Eta) <- c(D-1, N, 2000)
+fit.foo <- uncollapse(fit.foo$Eta, fit.foo$mdataset$X, fit.foo$mdataset$upsilon, 
+           fit.foo$mdataset$Theta, fit.foo$mdataset$Xi, fit.foo$mdataset$Gamma)
 
+
+# 
+# fit.bar <- fit.mongrel2
+# fit.bar$Eta <- lap_approx(2000, c(apply(fit.mongrel2$Eta, c(1,2), mean)), solve(-hess.mongrel2))
+# dim(fit.bar$Eta) <- c(D-1, N, 2000)
+# fit.bar <- uncollapse(fit.bar$Eta, fit.bar$mdataset$X, fit.bar$mdataset$upsilon, 
+#                       fit.bar$mdataset$Theta, fit.bar$mdataset$Xi, fit.bar$mdataset$Gamma)
 
 
 
@@ -109,8 +165,13 @@ dim(fit.foo$Eta) <- c(D-1, N, 2000)
 # plotting ----------------------------------------------------------------
 
 plot_lambda(list("sc1"=fit.sc, 
+                 "sc3" = fit.sc3, 
                  "sco"=fit.sco, 
                  "me2"=fit.mongrel2, 
                  "foo" = fit.foo),
             Lambda_true=Lambda_true)
 
+plot_eta(list("sc1"=fit.sc, 
+              "sco"=fit.sco, 
+              "me2"=fit.mongrel2, 
+              "foo" = fit.foo))

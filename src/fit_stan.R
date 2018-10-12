@@ -32,10 +32,11 @@ rstan_options(auto_write = TRUE)
 #'   ("collapsed":default, "uncollapsed")
 #' @param ret_stanfit should stanfit object be returned directly instead of 
 #'   mfit object?
+#' @param ret_all (if TRUE returns all parameters from stan call)
 #' @param ... other parameters passed to function stan
 #' @return mfit object (but returns stanfit if ret_stanfit==TRUE)
 fit_mstan <- function(mdataset, chains=4, iter=2000, 
-                      parameterization="collapsed", ret_stanfit=FALSE, 
+                      parameterization="collapsed", ret_stanfit=FALSE, ret_all=FALSE,  
                       ...){
   init <- list()
   for (i in 1:chains){
@@ -44,8 +45,13 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   modcode <- switch(parameterization, 
                     "collapsed" = "src/rel_lm_collapsed.stan", 
                     "uncollapsed" = "src/rel_lm_uncollapsed.stan")
-  fit <- stan(modcode, data=mdataset, chains=chains, 
-              init=init, iter=iter, pars=c("B", "Sigma", "eta"),  ...)
+  if (ret_all){
+    fit <- stan(modcode, data=mdataset, chains=chains, 
+                init=init, iter=iter,  ...)
+  } else {
+    fit <- stan(modcode, data=mdataset, chains=chains, 
+                init=init, iter=iter, pars=c("B", "Sigma", "eta"),  ...)  
+  }
   if (ret_stanfit) return(fit)
   pars <- rstan::extract(fit, c("B", "Sigma", "eta"))
   rm(fit) # free up memory

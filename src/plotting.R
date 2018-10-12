@@ -70,7 +70,7 @@ plot_eta <- function(mfits, Eta_true=NULL){
   p +
     geom_pointrangeh(aes(xmin=p2.5, xmax=p97.5, color=Model), 
                      position=position_dodge2v(height=.3)) +
-    facet_grid(~covariate) +
+    facet_grid(~covariate, scales="free") +
     ylab("Coordinate") +
     theme_minimal() +
     theme(axis.title.x=element_blank()) +
