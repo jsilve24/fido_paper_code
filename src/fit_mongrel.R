@@ -31,9 +31,8 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=as.integer(n_samples), 
             Lambda=fit$Lambda, 
             Sigma=fit$Sigma,
-            Eta = fit$Eta, 
             mdataset=mdataset)
-  
+  m$Eta <- fit$Eta
   return(m)
 }
 

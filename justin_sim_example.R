@@ -89,7 +89,12 @@ hess.mongrel2[22:28,22:28]
 
 fit.foo <- fit.mongrel2
 fit.foo$Eta <- lap_approx(2000, c(fit.sco2$par$eta), solve(-hess.mongrel2))
-dim(fit.foo$Eta) <- c(D-1, Q, 2000)
+dim(fit.foo$Eta) <- c(D-1, N, 2000)
+
+
+
+
+
 
 
 # # Finite Differences

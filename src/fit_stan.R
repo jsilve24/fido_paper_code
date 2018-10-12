@@ -53,9 +53,8 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=aperm(pars$B, c(2,3,1)), 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
-            mdataset=mdataset, 
-            Eta = aperm(pars$eta, c(2, 3, 1)))
-  
+            mdataset=mdataset)
+  m$Eta <- aperm(pars$eta, c(2, 3, 1))
   return(m)
 }
 
@@ -98,8 +97,8 @@ fit_mstan_optim <- function(mdataset, iter=2000,
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=aperm(pars$B, c(2,3,1)), 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
-            mdataset=mdataset, 
-            Eta = aperm(pars$eta, c(2, 3, 1)))
+            mdataset=mdataset)
+  m$Eta <- aperm(pars$eta, c(2, 3, 1))
   if (hessian) m$hessian <- fit$hessian
   return(m)
 }
