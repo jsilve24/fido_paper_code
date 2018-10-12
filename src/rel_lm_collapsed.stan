@@ -24,6 +24,7 @@ data {
 transformed data{
   int<lower=0> YT[N, D];
   matrix[N, Q] XT = X';
+  cov_matrix[D-1] K = inverse_spd(Xi);
   matrix[Q,D-1] ThetaT = Theta';
   matrix[N, N] I = diag_matrix(rep_vector(1, N));
   matrix[N, N] A = inverse_spd(I + XT*Gamma*XT');
@@ -51,7 +52,8 @@ transformed parameters {
     pi[j] = softmax_id(eta[,j]);
 }
 model {
-  target += -upsilonN*log_determinant(I + A*quad_form(Xi, E_T));
+  //target += -upsilonN*log_determinant(I + A*quad_form(Xi, E_T));
+  target += -upsilonN*log_determinant(I + A*quad_form(K, E_T));
   for(i in 1:N)
     YT[i] ~ multinomial(pi[i]);
 }

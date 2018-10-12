@@ -6,6 +6,7 @@ source("src/utils.R")
 source("src/fit_stan.R")
 source("src/plotting.R")
 source("src/fit_mongrel.R")
+source("src/GH_standalone.R")
 
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
@@ -27,12 +28,20 @@ hessMC <- function(mdataset, eta){
                        A, eta)
 }
 
+lap_approx <- function(n, mu, Sigma){
+  p <- length(mu)
+  L <- t(chol(Sigma))
+  Z <- matrix(rnorm(n*p), p, n)
+  X <- L%*%Z
+  X <- sweep(X, 1, mu, FUN=`+`)
+}
+
 
 # simulation --------------------------------------------------------------
 
-N <- 20L
+N <- 7L
 Q <- 4L
-D <- 15L
+D <- 5L
 X <- rbind(1, matrix(rnorm((Q-1)*N), Q-1, N))
 Lambda_true <- matrix(rnorm((D-1)*Q), D-1, Q)
 Sigma_true <- solve(rWishart(1, D+10, diag(D-1))[,,1])
@@ -71,16 +80,32 @@ fit.mongrel2 <- fit_mongrel(sim_data, decomposition = "eigen")
 
 
 
-# Check stan hessian against our hessian calculated at Stan's MAP estimate
-fit.sco2$hessian[1:5,1:5]
-hess.mongrel2 <- hessMC(sim_data, fit.sco2$par$eta)
-hess.mongrel2[1:5,1:5]
 
+
+# Check stan hessian against our hessian calculated at Stan's MAP estimate
+fit.sco2$hessian[22:28,22:28]
+hess.mongrel2 <- hessMC(sim_data, fit.sco2$par$eta)
+hess.mongrel2[22:28,22:28]
+
+fit.foo <- fit.mongrel2
+fit.foo$Eta <- lap_approx(2000, c(fit.sco2$par$eta), solve(-hess.mongrel2))
+dim(fit.foo$Eta) <- c(D-1, Q, 2000)
+
+
+# # Finite Differences
+# nll_partial <- function(x) nll(x, sim_data$Y, sim_data$X, sim_data$upsilon, 
+#                                sim_data$Theta, sim_data$Xi, sim_data$Gamma)
+# hess <- numDeriv::hessian(nll_partial, c(fit.sco2$par$eta))
+# #nlme::fdHess(c(fit.sco2$par$eta), nll_partial)
+# 
+# apply(fit.sco$Lambda, c(1,2), mean)
+# apply(fit.mongrel2$Lambda, c(1,2), mean)
+# 
 # plotting ----------------------------------------------------------------
 
 plot_lambda(list("sc1"=fit.sc, 
                  "sco"=fit.sco, 
-                 "me2"=fit.mongrel2), 
+                 "me2"=fit.mongrel2, 
+                 "foo" = fit.foo),
             Lambda_true=Lambda_true)
-
 
