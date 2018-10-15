@@ -1,6 +1,41 @@
 require(mongrel)
 require(driver)
 
+#' Simulate hyperparameters, then data from the model (multinomial)
+#' Returns an mdataset
+#' 
+#' @param N number of samples (integer)
+#' @param D number of categories (integer)
+#' @param Q number of covariates (integer)
+#' @param sparse logical, if TRUE induces more zero counts in Y
+#' 
+#' @details Generates random X, Lambda_true, Sigma_true, Theta, Xi, Gamma, upsilon
+#' @examples 
+#' simulate_with_hyperparams(15L, 12L, 8L, TRUE)
+simulate_with_hyperparams <- function(N=10L, D=10L, Q=5L, sparse=TRUE){
+  stopifnot(is.integer(N), is.integer(D), is.integer(Q))
+  
+  X <- rbind(1, matrix(rnorm((Q-1)*N), Q-1, N))
+  Lambda_true <- matrix(rnorm((D-1)*Q), D-1, Q)
+  Sigma_true <- solve(rWishart(1, D+10, diag(D-1))[,,1])
+  
+  if(sparse) {
+    # Add a bit of sparsity by changing mean of intercept
+    Lambda_true[,1] <- seq(0, (D-1)*.3, length=D-1) + Lambda_true[,1]
+  }
+  
+  Theta <- matrix(0, D-1, Q)
+  upsilon <- D+10
+  Xi <- Sigma_true*(upsilon-(D-1)-1)
+  
+  # account for increased uncertainty in intercept without acctually making
+  # Theta an informed prior
+  Gamma <- diag(c(10, rep(1, Q-1))) 
+  
+  sim_data <- simulate_mdataset(N, size=rpois(N, 5000), X, Lambda_true, Sigma_true, 
+                                Theta, Gamma, Xi, upsilon)
+  return(sim_data)
+}
 
 #' Simulate mdataset from model (multinomial) 
 #' Everything done in ALR_D
