@@ -20,18 +20,25 @@ source("src/utils.R")
 #' @param ret_mongrelfit return mongrelfit instead of mfit object (default:FALSE)
 #' @param ... other parameters passed to function mongrel
 #' @return mfit object (returns mongrelfit if ret_mongrelfit)
-fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mongrelfit=FALSE,  ...){
-  
+fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mongrelfit=FALSE, ...){
+
+  start_time <- Sys.time()  
   fit <- mongrel(Y=mdataset$Y, X=mdataset$X, upsilon=mdataset$upsilon, 
                  Theta=mdataset$Theta, Gamma=mdataset$Gamma, Xi=mdataset$Xi, 
                  init=random_mongrel_init(mdataset$Y), 
                  decomp_method=decomposition, n_samples=n_samples,  ...)
+  end_time <- Sys.time()
   if (ret_mongrelfit) return(fit)
+
+  total_runtime <- end_time - start_time
+
+  metadata <- metadata(0, total_runtime, n_samples)
 
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=as.integer(n_samples), 
             Lambda=fit$Lambda, 
             Sigma=fit$Sigma,
-            mdataset=mdataset)
+            mdataset=mdataset,
+            metadata=metadata)
   m$Eta <- fit$Eta
   return(m)
 }

@@ -17,16 +17,16 @@ require(driver)
 #' 
 #' @return object of class mfit
 #' @details internally verifys input
-mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset){
-  m <- new_mfit(N, D, Q, iter, Lambda, Sigma, mdataset)
+mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset, metadata=NULL){
+  m <- new_mfit(N, D, Q, iter, Lambda, Sigma, mdataset, metadata)
   verify(m)
   return(m)
 }
 
 # Keep internal (don't call directly from other code)
-new_mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset){
+new_mfit <- function(N, D, Q, iter, Lambda, Sigma, mdataset, metadata=NULL){
   m <- list(N=N, D=D, Q=Q, iter=iter, Lambda=Lambda, Sigma=Sigma, 
-            mdataset=mdataset)
+            mdataset=mdataset, metadata=metadata)
   class(m) <- c("mfit", "list")
   return(m)
 }

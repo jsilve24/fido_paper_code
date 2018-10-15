@@ -52,14 +52,28 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
     fit <- stan(modcode, data=mdataset, chains=chains, 
                 init=init, iter=iter, pars=c("B", "Sigma", "eta"),  ...)  
   }
+
   if (ret_stanfit) return(fit)
+
+  time_stan <- get_elapsed_time(fit)
+  max_chain_warmup <- max(time_stan[,"warmup"])
+  max_chain_sample <- max(time_stan[,"sample"])
+
+  fit_summary <- summary(fit)
+  fit_summary_s2 <- fit_summary$summary
+  B_rows <- fit_summary_s2[grep("^B",rownames(fit_summary_s2)),]
+  mean_n_eff <- mean(B_rows[,"n_eff"])
+
+  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff)
+
   pars <- rstan::extract(fit, c("B", "Sigma", "eta"))
   rm(fit) # free up memory
   
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=aperm(pars$B, c(2,3,1)), 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
-            mdataset=mdataset)
+            mdataset=mdataset,
+            metadata=metadata)
   m$Eta <- aperm(pars$eta, c(2, 3, 1))
   return(m)
 }

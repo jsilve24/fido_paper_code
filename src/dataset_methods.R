@@ -120,6 +120,26 @@ new_mdataset <- function(N, D, Q, Y, X, Lambda_true, Sigma_true,
 }
 
 
+
+# constructor for metadata objects ----------------------------------------
+
+#' Constructor for S3 metadata
+#' 
+#' @param warmup_runtime seconds of runtime used in warm-up or burn-in
+#' @param total_runtime seconds of total execution time
+#' @param mean_ess mean effective sample size over the Lambdas
+#'
+#' @return object of class metadata
+#' @details 
+metadata <- function(warmup_runtime, total_runtime, mean_ess){
+  m <- list(warmup_runtime=warmup_runtime, total_runtime=total_runtime,
+            mean_ess=mean_ess)
+  class(m) <- c("metadata", "list")
+  return(m)
+}
+
+
+
 # s3 methods --------------------------------------------------------------
 
 
