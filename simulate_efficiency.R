@@ -71,11 +71,6 @@ if(model == 2) {
   cat(paste("mongrel_eigen,",fit.mongrel.eigen$metadata$mean_ess,",",fit.mongrel.eigen$metadata$warmup_runtime,",",
     fit.mongrel.eigen$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mongrel.eigen$metadata$lambda_MSE,",",fit.mongrel.eigen$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-
-  plot_lambda(list("me" = fit.mongrel.eigen),
-              Lambda_true=sim_data$Lambda_true,
-              image_filename="lambda_test.png")
-
 }
 
 if(model == 3) {
