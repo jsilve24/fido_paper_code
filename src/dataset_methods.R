@@ -74,8 +74,6 @@ simulate_mdataset <- function(N, size, X, Lambda_true, Sigma_true, Theta, Gamma,
     Y[,j] <- rmultinom(1, size=size[j], prob=pi[,j])
   }
 
-  print(X)
-  
   # Collect into mdataset object (with internal verify call)
   m <- mdataset(N=N, D=D, Q=Q, Y=Y, X=X, Lambda_true=Lambda_true, 
                 Sigma_true=Sigma_true, Theta=Theta, Gamma=Gamma, Xi=Xi, 
@@ -130,12 +128,14 @@ new_mdataset <- function(N, D, Q, Y, X, Lambda_true, Sigma_true,
 #' @param warmup_runtime seconds of runtime used in warm-up or burn-in
 #' @param total_runtime seconds of total execution time
 #' @param mean_ess mean effective sample size over the Lambdas
+#' @param lambda_MSE mean squared error of estimated and true Lambdas
+#' @param outside_95CI proportion of true Lambda values outside 95% posterior CI
 #'
 #' @return object of class metadata
 #' @details 
-metadata <- function(warmup_runtime, total_runtime, mean_ess){
+metadata <- function(warmup_runtime, total_runtime, mean_ess, lambda_MSE, outside_95CI){
   m <- list(warmup_runtime=warmup_runtime, total_runtime=total_runtime,
-            mean_ess=mean_ess)
+            mean_ess=mean_ess, lambda_MSE=lambda_MSE, outside_95CI=outside_95CI)
   class(m) <- c("metadata", "list")
   return(m)
 }
@@ -164,3 +164,20 @@ verify.mdataset <- function(m, ...){
   check_dims(m$upsilon, c(1), "upsilon")
   check_dims(m$Theta, c(D-1, Q), "Theta")
 }
+
+
+# internal
+# gets the Euclidean distance between a (vectorized) Lambda matrix and Lambda_true
+sample_SE <- function(x,y) {
+  (x-y)**2
+}
+lambda_outside_bounds <- function(x) {
+  # x[1] is the 0.025 quantile
+  # x[2] is the 0.975 quantile
+  # x[3] is the value we're testing for inclusion
+  if(x[3] < x[1] || x[3] > x[2]) {
+    return(1)
+  }
+  return(0)
+}
+

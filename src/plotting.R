@@ -94,14 +94,16 @@ plot_eta <- function(mfits, Eta_true=NULL, image_filename=NULL){
 #' 
 #' @details Columns of the data table are expected to be: model, ESS, burnin_runtime,
 #' sample_runtime, N, D, Q, total_iter, burnin_iter, random_seed
-plot_SpES <- function(dat, varying_param){
+plot_SpES <- function(dat, varying_param, image_filename=NULL){
   p <- dat %>% 
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
     ggplot(aes_string(x=varying_param, y="SpES", color="model")) +
     geom_point() + 
     geom_smooth(method="lm") +
     scale_y_log10()
-  show(p)
+  if(!is.null(image_filename)) {
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+  }
 }
 
 

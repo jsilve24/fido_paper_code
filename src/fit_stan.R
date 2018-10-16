@@ -64,13 +64,29 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   B_rows <- fit_summary_s2[grep("^B",rownames(fit_summary_s2)),]
   mean_n_eff <- mean(B_rows[,"n_eff"])
 
-  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff)
-
   pars <- rstan::extract(fit, c("B", "Sigma", "eta"))
   rm(fit) # free up memory
-  
+
+  # get Lambda MSE
+  ref <- c(mdataset$Lambda_true)
+  est_Lambda <- aperm(pars$B, c(2,3,1))
+  flattened_est_Lambda <- est_Lambda
+
+  n_samples <- (chains*iter)/2
+  dim(flattened_est_Lambda) <- c(nrow(est_Lambda)*ncol(est_Lambda),n_samples)
+  lambda_MSE <- mean(apply(flattened_est_Lambda, 2, sample_SE, y=ref))
+
+  # get count of Lambdas outside 95% CI
+  intervals <- apply(est_Lambda, c(1,2), function(x) quantile(x, probs=c(0.025, 0.975)))
+  lower <- c(intervals[1,,])
+  upper <- c(intervals[2,,])
+
+  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((D-1)*Q)
+
+  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_MSE, outside_95CI)
+
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
-            Lambda=aperm(pars$B, c(2,3,1)), 
+            Lambda=est_Lambda, 
             Sigma=aperm(pars$Sigma, c(2,3,1)), 
             mdataset=mdataset,
             metadata=metadata)

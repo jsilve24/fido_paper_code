@@ -53,7 +53,8 @@ set.seed(rseed)
 sim_data <- simulate_with_hyperparams(N, D, Q, sparse=FALSE)
 
 # Calculate Sparsity 
-print(paste("Percent zeros: ", sum(sim_data$Y==0)/prod(dim(sim_data$Y)), sep=""))
+percent_zero <- sum(sim_data$Y==0)/prod(dim(sim_data$Y))
+print(paste("Percent zero counts: ",percent_zero,sep=""))
 
 # analysis ----------------------------------------------------------------
 
@@ -61,21 +62,25 @@ if(model == 1) {
   per_chain_it <- as.integer(iter/2)
   fit.sc <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE, iter=per_chain_it)
   cat(paste("stan_collapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
-    fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+    fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
+    fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
 }
 
 if(model == 2) {
   fit.mongrel.eigen <- fit_mongrel(sim_data, decomposition="eigen", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
   cat(paste("mongrel_eigen,",fit.mongrel.eigen$metadata$mean_ess,",",fit.mongrel.eigen$metadata$warmup_runtime,",",
-    fit.mongrel.eigen$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+    fit.mongrel.eigen$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
+    fit.mongrel.eigen$metadata$lambda_MSE,",",fit.mongrel.eigen$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
 
-#  plot_lambda(list("me" = fit.mongrel.eigen),
-#              Lambda_true=sim_data$Lambda_true,
-#              image_filename="test_lambda.png")
+  plot_lambda(list("me" = fit.mongrel.eigen),
+              Lambda_true=sim_data$Lambda_true,
+              image_filename="lambda_test.png")
+
 }
 
 if(model == 3) {
   fit.mongrel.cholesky <- fit_mongrel(sim_data, decomposition="cholesky", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
   cat(paste("mongrel_cholesky,",fit.mongrel.cholesky$metadata$mean_ess,",",fit.mongrel.cholesky$metadata$warmup_runtime,",",
-    fit.mongrel.cholesky$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+    fit.mongrel.cholesky$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
+    fit.mongrel.cholesky$metadata$lambda_MSE,",",fit.mongrel.cholesky$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
 }

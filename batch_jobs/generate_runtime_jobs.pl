@@ -10,11 +10,14 @@ my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $random_seed = 1;
+my $vary = 'N';
 
-my $vary = 'Q';
-
-if($vary eq 'N') {
+if($vary eq 'test') {
+	# trivial test case
+	@N_vals = qw(10);
+	@D_vals = qw(10);
+	@Q_vals = qw(5);
+} elsif($vary eq 'N') {
 	# varying N
 	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
 	@D_vals = qw(30);
@@ -69,7 +72,7 @@ for my $N (@N_vals) {
 
 				print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
-				print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$m_idx.' '.$logfile."\n";
+				print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$m_idx.' '.$logfile.' 0.002 50000 0.99 1e-10'."\n";
 
 				close $fh;
 
