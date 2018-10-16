@@ -60,7 +60,6 @@ for my $N (@N_vals) {
 				print $fh '#!/bin/bash'."\n";
 				print $fh '#SBATCH -J '.$m_short.'_'.$N.'_'.$D.'_'.$Q."\n";
 				print $fh '#SBATCH --mem=64GB'."\n";
-				print $fh '#SBATCH --ntasks-per-node=4'."\n";
 				print $fh '#SBATCH --get-user-env'."\n";
 				print $fh '#SBATCH --time=48:00:00'."\n";
 				print $fh '#'."\n\n";
@@ -74,7 +73,11 @@ for my $N (@N_vals) {
 
 				close $fh;
 
-				`sbatch $filename`;
+				if($m_idx < 2) {
+					`sbatch --ntasks=1 --cpus-per-task=4 $filename`;
+				} else {
+					`sbatch --ntasks=1 --cpus-per-task=1 $filename`;
+				}
 				sleep(1);
 				print("Submitting $filename...\n");
 			}

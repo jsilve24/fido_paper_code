@@ -12,7 +12,7 @@ require(driver)
 #' @details Generates random X, Lambda_true, Sigma_true, Theta, Xi, Gamma, upsilon
 #' @examples 
 #' simulate_with_hyperparams(15L, 12L, 8L, TRUE)
-simulate_with_hyperparams <- function(N=10L, D=10L, Q=5L, sparse=TRUE){
+simulate_with_hyperparams <- function(N=10L, D=10L, Q=5L, sparse=FALSE){
   stopifnot(is.integer(N), is.integer(D), is.integer(Q))
   
   X <- rbind(1, matrix(rnorm((Q-1)*N), Q-1, N))
@@ -73,6 +73,8 @@ simulate_mdataset <- function(N, size, X, Lambda_true, Sigma_true, Theta, Gamma,
   for (j in 1:N){
     Y[,j] <- rmultinom(1, size=size[j], prob=pi[,j])
   }
+
+  print(X)
   
   # Collect into mdataset object (with internal verify call)
   m <- mdataset(N=N, D=D, Q=Q, Y=Y, X=X, Lambda_true=Lambda_true, 
