@@ -64,6 +64,7 @@ if(model == 1) {
   cat(paste("stan_collapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
     fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
     fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+  save(fit.sc, file="fit_SC.RData")
 }
 
 if(model == 2) {
@@ -71,6 +72,7 @@ if(model == 2) {
   cat(paste("mongrel_eigen,",fit.mongrel.eigen$metadata$mean_ess,",",fit.mongrel.eigen$metadata$warmup_runtime,",",
     fit.mongrel.eigen$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mongrel.eigen$metadata$lambda_MSE,",",fit.mongrel.eigen$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+  save(fit.mongrel.eigen, file="fit_ME.RData")
 }
 
 if(model == 3) {
@@ -78,4 +80,5 @@ if(model == 3) {
   cat(paste("mongrel_cholesky,",fit.mongrel.cholesky$metadata$mean_ess,",",fit.mongrel.cholesky$metadata$warmup_runtime,",",
     fit.mongrel.cholesky$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mongrel.cholesky$metadata$lambda_MSE,",",fit.mongrel.cholesky$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+  save(fit.mongrel.cholesky, file="fit_MC.RData")
 }

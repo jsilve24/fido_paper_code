@@ -10,7 +10,7 @@ my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $vary = 'N';
+my $vary = 'Q';
 
 if($vary eq 'test') {
 	# trivial test case
