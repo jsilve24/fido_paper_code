@@ -1,4 +1,4 @@
-model,ESS,burnin_runtime,sample_runtime,N,D,Q,total_iter,burnin_iter,percent_zero,lambda_RMSE,percent_outside_95CI,random_seed
+model,ESS,burnin_runtime,sample_runtime,N,D,Q,total_iter,burnin_iter,percent_zero,lambda_MSE,percent_outside_95CI,random_seed
 mongrel_eigen,2000,0,0.134026765823364,100,3,5,2000,0,0.01,0.00501825377430835,0.1,2
 mongrel_cholesky,2000,0,0.11806321144104,100,3,5,2000,0,0.01,0.00457951819637452,0.2,2
 mongrel_cholesky,2000,0,0.372946500778198,100,5,5,2000,0,0.022,0.00442144809761764,0.05,2
