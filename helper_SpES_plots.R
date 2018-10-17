@@ -2,10 +2,13 @@ require(ggplot2)
 
 source("src/plotting.R")
 
-datN <- read.csv("results_efficiency/default_optim_params/run_N-varying.log")
-datD <- read.csv("results_efficiency/default_optim_params/run_D-varying.log")
-datQ <- read.csv("results_efficiency/default_optim_params/run_Q-varying.log")
+#log_dir <- "results_efficiency/default_optim_params/"
+log_dir <- ""
 
-plot_SpES(datN, "N", image_filename="results_efficiency/default_optim_params/N_SpES_plot.png")
-plot_SpES(datD, "D", image_filename="results_efficiency/default_optim_params/D_SpES_plot.png")
-plot_SpES(datQ, "Q", image_filename="results_efficiency/default_optim_params/Q_SpES_plot.png")
+datN <- read.csv(paste(log_dir,"run_N-varying.log",sep=""))
+datD <- read.csv(paste(log_dir,"run_D-varying.log",sep=""))
+datQ <- read.csv(paste(log_dir,"run_Q-varying.log",sep=""))
+
+plot_SpES(datN, "N", image_filename=paste(log_dir,"N_SpES_plot.png",sep=""))
+plot_SpES(datD, "D", image_filename=paste(log_dir,"D_SpES_plot.png",sep=""))
+plot_SpES(datQ, "Q", image_filename=paste(log_dir,"Q_SpES_plot.png",sep=""))
