@@ -14,24 +14,27 @@ my $vary = 'Q';
 
 if($vary eq 'test') {
 	# trivial test case
-	@N_vals = qw(10);
-	@D_vals = qw(10);
-	@Q_vals = qw(5);
+	@N_vals = qw(1000);
+	@D_vals = qw(1000);
+	@Q_vals = qw(500);
 } elsif($vary eq 'N') {
 	# varying N
-	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
+#	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
+	@N_vals = qw(10 20 30 50 100 250 500);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
 	# varying D
 	@N_vals = qw(100);
-	@D_vals = qw(3 5 10 25 50 75 100 250 500);
+#	@D_vals = qw(3 5 10 25 50 75 100 250 500);
+	@D_vals = qw(3 5 10 25 50 75 100 250);
 	@Q_vals = qw(5);
 } elsif($vary eq 'Q') {
 	# varying Q
 	@N_vals = qw(100);
 	@D_vals = qw(30);
-	@Q_vals = qw(1 2 3 5 10 20 50 75 100 250 500);
+#	@Q_vals = qw(1 2 3 5 10 20 50 75 100 250 500);
+	@Q_vals = qw(2 3 5 10 20 50 75 100 250 500);
 }
 
 my @methods = qw(1 2 3);
@@ -41,6 +44,7 @@ my @methods = qw(1 2 3);
 
 print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1))." slurm scripts...\n");
 
+my $sys_response = '';
 for my $N (@N_vals) {
 	for my $D (@D_vals) {
 		for my $Q (@Q_vals) {
@@ -56,7 +60,7 @@ for my $N (@N_vals) {
 				}
 
 				my $filename = 'scripts/'.$vary.'-varying_N'.$N.'_D'.$D.'_Q'.$Q.'_'.$m_short.'.slurm';
-				my $logfile = 'run_'.$vary.'-varying.log';
+				my $logfile = 'run_'.$vary.'-varying_2018-10-17.log';
 
 				open(my $fh, '>', $filename);
 
@@ -77,12 +81,12 @@ for my $N (@N_vals) {
 				close $fh;
 
 				if($m_idx < 2) {
-					`sbatch --ntasks=1 --cpus-per-task=4 $filename`;
+					$sys_response = `sbatch --ntasks=1 --cpus-per-task=4 $filename`;
 				} else {
-					`sbatch --ntasks=1 --cpus-per-task=1 $filename`;
+					$sys_response = `sbatch --ntasks=1 --cpus-per-task=1 $filename`;
 				}
 				sleep(1);
-				print("Submitting $filename...\n");
+				print($sys_response."\tN=".$N."\tD=".$D."\tQ=".$Q."\n");
 			}
 
 		}
