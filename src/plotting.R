@@ -86,14 +86,17 @@ plot_eta <- function(mfits, Eta_true=NULL, image_filename=NULL){
 }
 
 
-
-
 #' Plot runtime as seconds per effective sample (SpES)
 #' 
 #' @param dat table of results from simulation runs
+#' @param varying_param x-axis parameter, increasing in dimension: 
+#' "N", "D", or "Q"
+#' @param image_filename if not NULL, filename (including extension) 
+#' to save plot out to
 #' 
-#' @details Columns of the data table are expected to be: model, ESS, burnin_runtime,
-#' sample_runtime, N, D, Q, total_iter, burnin_iter, random_seed
+#' @details Columns of the data table are expected to be: model, ESS,
+#' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
+#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
 plot_SpES <- function(dat, varying_param, image_filename=NULL){
   p <- dat %>% 
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
@@ -103,8 +106,64 @@ plot_SpES <- function(dat, varying_param, image_filename=NULL){
     scale_y_log10()
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+  } else {
+    show(p)
   }
 }
+
+
+#' Plot accuracy over increasing dimension
+#' 
+#' @param dat table of results from simulation runs
+#' @param varying_param x-axis parameter, increasing in dimension: 
+#' "N", "D", or "Q"
+#' @param use_95CI if TRUE, use percent of lambdas outside 95% 
+#' CI as accuracy measure
+#' @param image_filename if not NULL, filename (including extension) 
+#' to save plot out to
+#' 
+#' @details Columns of the data table are expected to be: model, ESS,
+#' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
+#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
+plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NULL){
+  accuracy_measure <- "lambda_MSE"
+  if(use_95CI) {
+    accuracy_measure <- "percent_outside_95CI"
+  }
+  p <- dat %>% 
+    ggplot(aes_string(x=varying_param, y=accuracy_measure, color="model")) +
+    geom_point() + 
+    geom_smooth(method="lm")
+  if(!is.null(image_filename)) {
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+  } else {
+    show(p)
+  }
+}
+
+
+#' Plot percent zero counts over increasing dimension
+#' 
+#' @param dat table of results from simulation runs
+#' @param varying_param x-axis parameter, increasing in dimension: 
+#' "N", "D", or "Q"
+#' @param image_filename if not NULL, filename (including extension) 
+#' to save plot out to
+#' 
+#' @details Columns of the data table are expected to be: model, ESS,
+#' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
+#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
+plot_sparsity <- function(dat, varying_param, image_filename=NULL){
+  p <- dat %>% 
+    ggplot(aes_string(x=varying_param, y="percent_zero")) +
+    geom_point()
+  if(!is.null(image_filename)) {
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+  } else {
+    show(p)
+  }
+}
+
 
 
 
