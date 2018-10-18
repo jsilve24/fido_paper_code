@@ -39,7 +39,7 @@ plot_lambda <- function(mfits, Lambda_true=NULL, image_filename=NULL){
     theme(axis.title.x=element_blank()) +
     scale_color_brewer(palette="Set1")
   if(!is.null(image_filename)) {
-    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   }
 }
 
@@ -81,7 +81,7 @@ plot_eta <- function(mfits, Eta_true=NULL, image_filename=NULL){
     theme(axis.title.x=element_blank()) +
     scale_color_brewer(palette="Set1")
   if(!is.null(image_filename)) {
-    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   }
 }
 
@@ -105,7 +105,7 @@ plot_SpES <- function(dat, varying_param, image_filename=NULL){
     geom_smooth(method="lm") +
     scale_y_log10()
   if(!is.null(image_filename)) {
-    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
     show(p)
   }
@@ -135,7 +135,7 @@ plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NUL
     geom_point() + 
     geom_smooth(method="lm")
   if(!is.null(image_filename)) {
-    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
     show(p)
   }
@@ -158,7 +158,7 @@ plot_sparsity <- function(dat, varying_param, image_filename=NULL){
     ggplot(aes_string(x=varying_param, y="percent_zero")) +
     geom_point()
   if(!is.null(image_filename)) {
-    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=1200)
+    ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
     show(p)
   }
