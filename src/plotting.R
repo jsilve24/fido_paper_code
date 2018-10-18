@@ -30,7 +30,7 @@ plot_lambda <- function(mfits, Lambda_true=NULL, image_filename=NULL){
                            aes(x=value, xend=value, 
                                y=coord-.3, yend=coord+.3))
   }
-  p +
+  p <- p +
     geom_pointrangeh(aes(xmin=p2.5, xmax=p97.5, color=Model), 
                    position=position_dodge2v(height=.3)) +
     facet_grid(~covariate) +
@@ -40,6 +40,8 @@ plot_lambda <- function(mfits, Lambda_true=NULL, image_filename=NULL){
     scale_color_brewer(palette="Set1")
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
+  } else {
+    show(p)
   }
 }
 
