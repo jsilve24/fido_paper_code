@@ -81,7 +81,7 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   lower <- c(intervals[1,,])
   upper <- c(intervals[2,,])
 
-  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((D-1)*Q)
+  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((mdataset$D-1)*mdataset$Q)
 
   metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_MSE, outside_95CI)
 

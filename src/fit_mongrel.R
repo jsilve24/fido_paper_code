@@ -42,7 +42,7 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
   lower <- c(intervals[1,,])
   upper <- c(intervals[2,,])
 
-  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((D-1)*Q)
+  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((mdataset$D-1)*mdataset$Q)
 
   metadata <- metadata(0, total_runtime, n_samples, lambda_MSE, outside_95CI)
 
