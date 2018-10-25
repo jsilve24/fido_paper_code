@@ -22,16 +22,16 @@ simulate_with_hyperparams <- function(N=10L, D=10L, Q=5L, sparse=FALSE){
   if(sparse) {
     # Add a bit of sparsity by changing mean of intercept
     Lambda_true[,1] <- seq(0, (D-1)*.3, length=D-1) + Lambda_true[,1]
+    # account for increased uncertainty in intercept without acctually making
+    # Theta an informed prior
+    Gamma <- diag(c(10, rep(1, Q-1))) 
   }
   
   Theta <- matrix(0, D-1, Q)
   upsilon <- D+10
   Xi <- Sigma_true*(upsilon-(D-1)-1)
-  
-  # account for increased uncertainty in intercept without acctually making
-  # Theta an informed prior
-  Gamma <- diag(c(10, rep(1, Q-1))) 
-  
+  Gamma <- diag(Q)
+ 
   sim_data <- simulate_mdataset(N, size=rpois(N, 5000), X, Lambda_true, Sigma_true, 
                                 Theta, Gamma, Xi, upsilon)
   return(sim_data)
@@ -76,8 +76,7 @@ simulate_mdataset <- function(N, size, X, Lambda_true, Sigma_true, Theta, Gamma,
 
   # Collect into mdataset object (with internal verify call)
   m <- mdataset(N=N, D=D, Q=Q, Y=Y, X=X, Lambda_true=Lambda_true, 
-                Sigma_true=Sigma_true, Theta=Theta, Gamma=Gamma, Xi=Xi, 
-                upsilon=upsilon)
+                Sigma_true=Sigma_true, Theta=Theta, Gamma=Gamma, Xi=Xi, upsilon=upsilon)
   return(m)
 }
 
