@@ -104,9 +104,9 @@ if(model == 'sc') {
 if(model == 'su') {
   per_chain_it <- as.integer(iter/2)
   fit.su <- fit_mstan(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=per_chain_it)
-  cat(paste("stan_uncollapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
-    fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
-    fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
+  cat(paste("stan_uncollapsed,",fit.su$metadata$mean_ess,",",fit.su$metadata$warmup_runtime,",",
+    fit.su$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
+    fit.su$metadata$lambda_MSE,",",fit.su$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
   save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
@@ -123,7 +123,7 @@ if(model == 'mc') {
   cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",fit.mc$metadata$warmup_runtime,",",
     fit.mc$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.m, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'mcp') {

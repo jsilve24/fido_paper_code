@@ -41,6 +41,9 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   init <- list()
   for (i in 1:chains){
     init[[i]] <- list(eta=mongrel::random_mongrel_init(mdataset$Y))
+    if (parameterization == "uncollapsed"){
+      init[[i]]$Sigma = diag(mdataset$D-1)
+    }
   }
   modcode <- switch(parameterization, 
                     "collapsed" = "src/rel_lm_collapsed.stan", 

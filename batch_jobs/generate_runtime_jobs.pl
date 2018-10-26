@@ -6,13 +6,13 @@ use warnings;
 # set of dimensions (N,D,Q); probably overkill to submit each as a separate job but it's def faster
 # -------------------------------------------------------------------------------------------------------------------------
 
-open(my $job_listing, '>', 'job_listing.txt');
-
 my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $vary = 'N';
+my $vary = 'Q';
+
+open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
 if($vary eq 'test') {
 	# trivial case to test script generation
@@ -21,8 +21,7 @@ if($vary eq 'test') {
 	@Q_vals = qw(500);
 } elsif($vary eq 'N') {
 	# varying N
-#	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
-	@N_vals = qw(10 20 30 50);
+	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
@@ -38,7 +37,7 @@ if($vary eq 'test') {
 }
 
 #my @methods = qw(me mc mcp sc su);
-my @methods = qw(me);
+my @methods = qw(su);
 # 1 : Mongrel (eigendecomposition)
 # 2 : Mongrel (Cholesky)
 # 3 : Mongrel (Cholesky, partial)
@@ -46,7 +45,9 @@ my @methods = qw(me);
 # 5 : Stan (uncollapsed)
 # 6 : naive (conjugate linear model)
 
-print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1)*3)." slurm scripts...\n");
+my $replicates = 1;
+
+print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1)*$replicates)." slurm scripts...\n");
 
 my $simulation_ret = -1;
 my $sys_response = '';
@@ -54,7 +55,7 @@ for my $N (@N_vals) {
 	for my $D (@D_vals) {
 		for my $Q (@Q_vals) {
 
-			for (my $rep=1; $rep <= 1; $rep++) {
+			for (my $rep=1; $rep <= $replicates; $rep++) {
 				# separately generate data; eventually we'll want more replicates
 				chdir '..';
 				my $simulation_ret = system("Rscript generate_data.R $N $D $Q $rep simulated_data");

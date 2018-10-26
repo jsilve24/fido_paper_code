@@ -3,12 +3,14 @@ require(ggplot2)
 source("src/plotting.R")
 
 #log_dir <- "results_efficiency/default_optim_params/"
-log_dir <- "results_efficiency/run3/"
-#log_dir <- ""
+#log_dir <- "results_efficiency/run3/"
+log_dir <- ""
 
-datN <- read.csv(paste(log_dir,"run_N-varying.log",sep=""))
-datD <- read.csv(paste(log_dir,"run_D-varying.log",sep=""))
-datQ <- read.csv(paste(log_dir,"run_Q-varying.log",sep=""))
+log_suffix <- "_2018-10-25"
+
+datN <- read.csv(paste(log_dir,"run_N-varying",log_suffix,".log",sep=""))
+datD <- read.csv(paste(log_dir,"run_D-varying",log_suffix,".log",sep=""))
+datQ <- read.csv(paste(log_dir,"run_Q-varying",log_suffix,".log",sep=""))
 
 # plot seconds per effective sample size
 
