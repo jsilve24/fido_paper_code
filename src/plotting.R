@@ -107,6 +107,7 @@ plot_SpES <- function(dat, varying_param, image_filename=NULL){
     ggplot(aes_string(x=varying_param, y="SpES", color="model")) +
     geom_point() + 
     geom_smooth(method="lm") +
+    scale_x_log10() + 
     scale_y_log10()
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
@@ -137,7 +138,8 @@ plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NUL
   p <- dat %>% 
     ggplot(aes_string(x=varying_param, y=accuracy_measure, color="model")) +
     geom_point() + 
-    geom_smooth(method="lm")
+    geom_smooth(method="lm") +
+    scale_x_log10()
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
@@ -160,7 +162,8 @@ plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NUL
 plot_sparsity <- function(dat, varying_param, image_filename=NULL){
   p <- dat %>% 
     ggplot(aes_string(x=varying_param, y="percent_zero")) +
-    geom_point()
+    geom_point() +
+    scale_x_log10()
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
