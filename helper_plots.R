@@ -18,6 +18,10 @@ datN <- datN[datN$model != "stan_uncollapsed",]
 datD <- datD[datD$model != "stan_uncollapsed",]
 datQ <- datQ[datQ$model != "stan_uncollapsed",]
 
+datN <- datN[datN$model != "mongrel_cholesky_partial",]
+datD <- datD[datD$model != "mongrel_cholesky_partial",]
+datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
+
 # plot seconds per effective sample size
 
 print("Plotting SpES...")
