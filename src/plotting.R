@@ -140,6 +140,9 @@ plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NUL
     geom_point() + 
     geom_smooth(method="lm") +
     scale_x_log10()
+  if(use_95CI) {
+    p <- p + ylim(0, 1)
+  }
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
@@ -163,7 +166,8 @@ plot_sparsity <- function(dat, varying_param, image_filename=NULL){
   p <- dat %>% 
     ggplot(aes_string(x=varying_param, y="percent_zero")) +
     geom_point() +
-    scale_x_log10()
+    scale_x_log10() +
+    ylim(0, 1)
   if(!is.null(image_filename)) {
     ggsave(image_filename, plot=last_plot(), width=10, height=10, dpi=600)
   } else {
