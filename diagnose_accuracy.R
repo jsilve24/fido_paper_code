@@ -12,11 +12,13 @@ load("fitted_models/MC_N100_D30_Q5_R3.RData")
 load("fitted_models/MCP_N100_D30_Q5_R3.RData")
 load("fitted_models/SC_N100_D30_Q5_R3.RData")
 
+output_dir <- "results_accuracy/run4/"
+
 N_ll <- 1
 N_ul <- 5 # max 100
 
 D_ll <- 1
-D_ul <- 5 # max 29
+D_ul <- 29 # max 29
 
 Q_ll <- 1
 Q_ul <- 5 # max 5
@@ -77,8 +79,8 @@ cat(paste("Outside 95 CI count ME:",get_outside_count(ME$Lambda, ref),"\n"))
 cat(paste("Outside 95 CI count SC:",get_outside_count(SC$Lambda, ref),"\n"))
 
 if(do_plot) {
-  plot_lambda(mfits, Lambda_true=Lambda_true, image_filename="Lambda_subset_plot_N100_D30_Q5_R3.png")
-  plot_eta(mfits, Eta_true=NULL, image_filename="Eta_subset_plot_N100_D30_Q5_R3.png")
+  plot_lambda(mfits, Lambda_true=Lambda_true, image_filename=paste(output_dir,"Lambda_subset_plot_N100_D30_Q5_R3.png",sep=""))
+  plot_eta(mfits, Eta_true=NULL, image_filename=paste(output_dir,"Eta_subset_plot_N100_D30_Q5_R3.png",sep=""))
 }
 
 
