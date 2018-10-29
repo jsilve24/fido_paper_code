@@ -45,9 +45,9 @@ plot_accuracy(datD, "D", use_95CI=TRUE, image_filename=paste(log_dir,"95CI_D_plo
 plot_accuracy(datQ, "Q", use_95CI=TRUE, image_filename=paste(log_dir,"95CI_Q_plot",file_suffix,".png",sep=""))
 
 print("Plotting zeros...")
-plot_sparsity(datN, "N", image_filename=paste(log_dir,"zeros_N_plot",file_suffix,".png",sep=""))
-plot_sparsity(datD, "D", image_filename=paste(log_dir,"zeros_D_plot",file_suffix,".png",sep=""))
-plot_sparsity(datQ, "Q", image_filename=paste(log_dir,"zeros_Q_plot",file_suffix,".png",sep=""))
+plot_sparsity(datN, "N", image_filename=paste(log_dir,"zeros_N_plot.png",sep=""))
+plot_sparsity(datD, "D", image_filename=paste(log_dir,"zeros_D_plot.png",sep=""))
+plot_sparsity(datQ, "Q", image_filename=paste(log_dir,"zeros_Q_plot.png",sep=""))
 
 
 
