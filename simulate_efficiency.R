@@ -20,7 +20,7 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 6) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm'}",
                    "{log file} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f}"))
-        # Rscript simulate_efficiency.R 10 10 5 1 clm output.log 0.003 10000 0.9 1e-10
+        # Rscript simulate_efficiency.R 10 10 5 1 clm output.log 0.002 50000 0.99 1e-10
 	# model 'clm' : conjugate linear model
 	#       'sc'  : Stan (collapsed)
 	#       'su'  : Stan (uncollapsed)
