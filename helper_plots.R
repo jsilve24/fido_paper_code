@@ -8,19 +8,21 @@ log_dir <- "results_efficiency/run4/"
 #log_dir <- ""
 
 log_suffix <- "_2018-10-25"
+exclude_su_mcp <- TRUE
 
 datN <- read.csv(paste(log_dir,"run_N-varying",log_suffix,".log",sep=""))
 datD <- read.csv(paste(log_dir,"run_D-varying",log_suffix,".log",sep=""))
 datQ <- read.csv(paste(log_dir,"run_Q-varying",log_suffix,".log",sep=""))
 
-# exclude unfinished
-datN <- datN[datN$model != "stan_uncollapsed",]
-datD <- datD[datD$model != "stan_uncollapsed",]
-datQ <- datQ[datQ$model != "stan_uncollapsed",]
+if(exclude_su_mcp) {
+  datN <- datN[datN$model != "stan_uncollapsed",]
+  datD <- datD[datD$model != "stan_uncollapsed",]
+  datQ <- datQ[datQ$model != "stan_uncollapsed",]
 
-datN <- datN[datN$model != "mongrel_cholesky_partial",]
-datD <- datD[datD$model != "mongrel_cholesky_partial",]
-datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
+  datN <- datN[datN$model != "mongrel_cholesky_partial",]
+  datD <- datD[datD$model != "mongrel_cholesky_partial",]
+  datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
+}
 
 # plot seconds per effective sample size
 
