@@ -8,7 +8,7 @@ log_dir <- "results_efficiency/run4/"
 #log_dir <- ""
 
 log_suffix <- "_2018-10-25"
-exclude_su_mcp <- FALSE
+exclude_su_mcp <- TRUE
 file_suffix <- ""
 
 datN <- read.csv(paste(log_dir,"run_N-varying",log_suffix,".log",sep=""))

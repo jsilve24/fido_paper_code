@@ -12,16 +12,17 @@ load("fitted_models/MC_N100_D30_Q5_R3.RData")
 load("fitted_models/MCP_N100_D30_Q5_R3.RData")
 load("fitted_models/SC_N100_D30_Q5_R3.RData")
 
-output_dir <- "results_accuracy/run4/"
+#output_dir <- "results_accuracy/run4/"
+output_dir <- ""
 
 N_ll <- 1
-N_ul <- 5 # max 100
+N_ul <- 5
 
 D_ll <- 1
-D_ul <- 29 # max 29
+D_ul <- 29
 
 Q_ll <- 1
-Q_ul <- 5 # max 5
+Q_ul <- 5
 
 print(paste("N range",N_ll,":",N_ul))
 print(paste("D range",D_ll,":",D_ul))
