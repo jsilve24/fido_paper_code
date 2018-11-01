@@ -30,9 +30,13 @@ datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
 # plot seconds per effective sample size
 
 print("Plotting SpES...")
-plot_SpES(datN, "N", image_filename=paste(log_dir,"SpES_N_plot",file_suffix,".png",sep=""))
-plot_SpES(datD, "D", image_filename=paste(log_dir,"SpES_D_plot",file_suffix,".png",sep=""))
-plot_SpES(datQ, "Q", image_filename=paste(log_dir,"SpES_Q_plot",file_suffix,".png",sep=""))
+plot_SpES(datN, "N", image_filename=paste(log_dir,"SpES_N_plot_log",file_suffix,".png",sep=""))
+plot_SpES(datD, "D", image_filename=paste(log_dir,"SpES_D_plot_log",file_suffix,".png",sep=""))
+plot_SpES(datQ, "Q", image_filename=paste(log_dir,"SpES_Q_plot_log",file_suffix,".png",sep=""))
+
+plot_SpES(datN, "N", image_filename=paste(log_dir,"SpES_N_plot",file_suffix,".png",sep=""), log_y=FALSE)
+plot_SpES(datD, "D", image_filename=paste(log_dir,"SpES_D_plot",file_suffix,".png",sep=""), log_y=FALSE)
+plot_SpES(datQ, "Q", image_filename=paste(log_dir,"SpES_Q_plot",file_suffix,".png",sep=""), log_y=FALSE)
 
 print("Plotting MSE...")
 plot_accuracy(datN, "N", image_filename=paste(log_dir,"MSE_N_plot",file_suffix,".png",sep=""))
