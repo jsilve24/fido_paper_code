@@ -37,3 +37,7 @@ Interesting things in D runs:
 (2) All the runs at N=100 D=100 Q=5 R=1,2,3 for Mongrel eigen and Mongrel Cholesky take
     much longer than runs at D=75 or D=250; optimization really having a hard time here?
     But the three datasets R=1,2,3 shouldn't be similar?
+
+Interesting things in Q runs:
+
+(1) Mongrel eigendecomposition weirdly varying runtimes (~1 second or ~60)?
