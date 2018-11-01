@@ -2,30 +2,30 @@ require(ggplot2)
 
 source("src/plotting.R")
 
-#log_dir <- "results_efficiency/default_optim_params/"
-#log_dir <- "results_efficiency/run3/"
 log_dir <- "results_efficiency/run4/"
 #log_dir <- ""
 
-log_suffix <- "_2018-10-25"
-exclude_su_mcp <- TRUE
+#log_suffix <- "_2018-10-25"
+log_suffix <- "-output"
+exclude_su_mcp <- FALSE
 file_suffix <- ""
 
-datN <- read.csv(paste(log_dir,"run_N-varying",log_suffix,".log",sep=""))
-datD <- read.csv(paste(log_dir,"run_D-varying",log_suffix,".log",sep=""))
-datQ <- read.csv(paste(log_dir,"run_Q-varying",log_suffix,".log",sep=""))
+datN <- read.csv(paste(log_dir,"N",log_suffix,".log",sep=""))
+datD <- read.csv(paste(log_dir,"D",log_suffix,".log",sep=""))
+datQ <- read.csv(paste(log_dir,"Q",log_suffix,".log",sep=""))
 
 if(exclude_su_mcp) {
   datN <- datN[datN$model != "stan_uncollapsed",]
   datD <- datD[datD$model != "stan_uncollapsed",]
   datQ <- datQ[datQ$model != "stan_uncollapsed",]
-
-  datN <- datN[datN$model != "mongrel_cholesky_partial",]
-  datD <- datD[datD$model != "mongrel_cholesky_partial",]
-  datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
 } else {
   file_suffix <- "_all"
 }
+
+# take out the trash
+datN <- datN[datN$model != "mongrel_cholesky_partial",]
+datD <- datD[datD$model != "mongrel_cholesky_partial",]
+datQ <- datQ[datQ$model != "mongrel_cholesky_partial",]
 
 # plot seconds per effective sample size
 

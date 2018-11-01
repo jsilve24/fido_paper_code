@@ -33,11 +33,12 @@ if($vary eq 'test') {
 	# varying Q
 	@N_vals = qw(100);
 	@D_vals = qw(30);
-	@Q_vals = qw(2 4 10 20 50 75 100 250 500);
+#	@Q_vals = qw(2 4 10 20 50 75 100 250 500);
+	@Q_vals = qw(2 4 500);
 }
 
-#my @methods = qw(me mc mcp sc su);
-my @methods = qw(clm);
+#my @methods = qw(me mc mcp sc su clm);
+my @methods = qw(me);
 # 1 : Mongrel (eigendecomposition)
 # 2 : Mongrel (Cholesky)
 # 3 : Mongrel (Cholesky, partial)
@@ -45,7 +46,7 @@ my @methods = qw(clm);
 # 5 : Stan (uncollapsed)
 # 6 : naive (conjugate linear model)
 
-my @rseed = qw(2 3);
+my @rseed = qw(2);
 
 print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1)*($#rseed+1))." slurm scripts...\n");
 
@@ -68,7 +69,7 @@ for my $N (@N_vals) {
 				for my $m_idx (@methods) {
 
 					my $filename = 'scripts/'.$vary.'-varying_N'.$N.'_D'.$D.'_Q'.$Q.'_'.$m_idx.'.slurm';
-					my $logfile = 'run_'.$vary.'-varying_2018-10-25.log';
+					my $logfile = 'run_'.$vary.'-varying_redo.log';
 
 					open(my $fh, '>', $filename);
 

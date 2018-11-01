@@ -21,15 +21,18 @@ source("src/utils.R")
 #' @return mfit object (returns mongrelfit if ret_mongrelfit)
 fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mongrelfit=FALSE, ...){
 
-  start_time <- Sys.time()  
+  start_time <- Sys.time()
+  cat("Start time:",start_time,"\n")
   fit <- mongrel(Y=mdataset$Y, X=mdataset$X, upsilon=mdataset$upsilon, 
                  Theta=mdataset$Theta, Gamma=mdataset$Gamma, Xi=mdataset$Xi, 
                  init=random_mongrel_init(mdataset$Y), 
                  decomp_method=decomposition, n_samples=n_samples,  ...)
   end_time <- Sys.time()
+  cat("End time:",end_time,"\n")
   if (ret_mongrelfit) return(fit)
 
   total_runtime <- end_time - start_time
+  cat("Total runtime:",total_runtime,"\n")
 
   # get Lambda MSE
   ref <- c(mdataset$Lambda_true)
