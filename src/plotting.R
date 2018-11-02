@@ -132,16 +132,18 @@ plot_SpES <- function(dat, varying_param, image_filename=NULL, log_y=TRUE){
 #' @details Columns of the data table are expected to be: model, ESS,
 #' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
 #' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
-plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NULL){
+plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NULL, fit_line=TRUE){
   accuracy_measure <- "lambda_MSE"
   if(use_95CI) {
     accuracy_measure <- "percent_outside_95CI"
   }
   p <- dat %>% 
     ggplot(aes_string(x=varying_param, y=accuracy_measure, color="model")) +
-    geom_point() + 
-    geom_smooth(method="lm") +
-    scale_x_log10()
+    geom_point()
+  if (fit_line) {
+    P <- p + geom_smooth(method="lm")
+  }
+  p <- p + scale_x_log10()
   if(use_95CI) {
     p <- p + ylim(0, 1)
   }
