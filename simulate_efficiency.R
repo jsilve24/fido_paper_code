@@ -88,8 +88,22 @@ print(paste("Percent zero counts: ",percent_zero,sep=""))
 # analysis ----------------------------------------------------------------
 
 if(model == 'clm') {
-  fit.clm <- conjugateLinearModel(sim_data$Y, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, n_samples=iter)
+  eta.hat <- t(driver::alr(t(sim_data$Y+0.65)))
+  fit.clm <- conjugateLinearModel(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, n_samples=iter)
   save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  
+  # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
+  Lambdas <- array(dim=c(D-1,Q,iter))
+  set.seed(1)
+  fit.u <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
+  Lambdas[,,1] <- fit.u$Lambda
+  for (i in 2:iter) {
+    set.seed(i)
+    temp <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
+    Lambdas[,,i] <- temp$Lambda
+  }
+  fit.u$Lambda <- Lambdas
+  save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'sc') {
