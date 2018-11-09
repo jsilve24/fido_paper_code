@@ -19,8 +19,8 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 6) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm'}",
-                   "{log file} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f}"))
-        # Rscript simulate_efficiency.R 10 10 5 1 clm output.log 0.002 50000 0.99 1e-10
+                   "{log file} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f} {opt: save_models}"))
+        # Rscript simulate_efficiency.R 10 10 5 1 mc output.log 0.002 50000 0.99 1e-10 FALSE
 	# model 'clm' : conjugate linear model
 	#       'sc'  : Stan (collapsed)
 	#       'su'  : Stan (uncollapsed)
@@ -48,6 +48,10 @@ if (length(args) >= 9) {
 	b1 <- as.numeric(args[9])
 	eps_f <- as.numeric(args[10])
 }
+save_models <- FALSE
+if (length(args) >= 11) {
+	save_models <- as.logical(args[11])
+}
 
 iter <- 2000L
 
@@ -67,7 +71,8 @@ writeLines(c("\nUsing parameter values",
              paste("\tb1:",b1),
              paste("\teps_f:",eps_f),
              paste("\tcalcPartialHess:",calcPartialHess),
-             paste("\titer:",iter)
+             paste("\titer:",iter),
+             paste("\tsave_models:",save_models)
           ))
 
 model_save_dir = "fitted_models"
@@ -90,8 +95,10 @@ print(paste("Percent zero counts: ",percent_zero,sep=""))
 if(model == 'clm') {
   eta.hat <- t(driver::alr(t(sim_data$Y+0.65)))
   fit.clm <- conjugateLinearModel(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, n_samples=iter)
-  save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  
+  if(save_models) {
+    save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
+
   # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
   Lambdas <- array(dim=c(D-1,Q,iter))
   set.seed(1)
@@ -103,7 +110,9 @@ if(model == 'clm') {
     Lambdas[,,i] <- temp$Lambda
   }
   fit.u$Lambda <- Lambdas
-  save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
 
 if(model == 'sc') {
@@ -112,7 +121,9 @@ if(model == 'sc') {
   cat(paste("stan_collapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
     fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
     fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
 
 if(model == 'su') {
@@ -121,7 +132,9 @@ if(model == 'su') {
   cat(paste("stan_uncollapsed,",fit.su$metadata$mean_ess,",",fit.su$metadata$warmup_runtime,",",
     fit.su$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
     fit.su$metadata$lambda_MSE,",",fit.su$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
 
 if(model == 'me') {
@@ -129,7 +142,9 @@ if(model == 'me') {
   cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",fit.me$metadata$warmup_runtime,",",
     fit.me$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.me$metadata$lambda_MSE,",",fit.me$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
 
 if(model == 'mc') {
@@ -137,7 +152,9 @@ if(model == 'mc') {
   cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",fit.mc$metadata$warmup_runtime,",",
     fit.mc$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
 
 if(model == 'mcp') {
@@ -145,5 +162,7 @@ if(model == 'mcp') {
   cat(paste("mongrel_cholesky_partial,",fit.mcp$metadata$mean_ess,",",fit.mcp$metadata$warmup_runtime,",",
     fit.mcp$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mcp$metadata$lambda_MSE,",",fit.mcp$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(save_models) {
+    save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  }
 }
