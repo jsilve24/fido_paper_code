@@ -37,7 +37,7 @@ if($vary eq 'test') {
 }
 
 #my @methods = qw(me mc mcp sc su clm);
-my @methods = qw(clm);
+my @methods = qw(clm mc me);
 # 1 : Mongrel (eigendecomposition)
 # 2 : Mongrel (Cholesky)
 # 3 : Mongrel (Cholesky, partial)

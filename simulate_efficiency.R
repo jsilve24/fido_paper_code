@@ -99,19 +99,21 @@ if(model == 'clm') {
     save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
   }
 
-  # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
-  Lambdas <- array(dim=c(D-1,Q,iter))
-  set.seed(1)
-  fit.u <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
-  Lambdas[,,1] <- fit.u$Lambda
-  for (i in 2:iter) {
-    set.seed(i)
-    temp <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
-    Lambdas[,,i] <- temp$Lambda
-  }
-  fit.u$Lambda <- Lambdas
-  if(save_models) {
-    save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  if(FALSE) {
+    # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
+    Lambdas <- array(dim=c(D-1,Q,iter))
+    set.seed(1)
+    fit.u <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
+    Lambdas[,,1] <- fit.u$Lambda
+    for (i in 2:iter) {
+      set.seed(i)
+      temp <- uncollapseMongrelCollapsed(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, ret_mean=FALSE)
+      Lambdas[,,i] <- temp$Lambda
+    }
+    fit.u$Lambda <- Lambdas
+    if(save_models) {
+      save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+    }
   }
 }
 
@@ -138,7 +140,9 @@ if(model == 'su') {
 }
 
 if(model == 'me') {
-  fit.me <- fit_mongrel(sim_data, decomposition="eigen", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
+  # double Mongrel iterations
+  iter <- 2L*iter
+  fit.me <- fit_mongrel(sim_data, n_samples=iter, decomposition="eigen", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
   cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",fit.me$metadata$warmup_runtime,",",
     fit.me$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.me$metadata$lambda_MSE,",",fit.me$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
@@ -148,7 +152,9 @@ if(model == 'me') {
 }
 
 if(model == 'mc') {
-  fit.mc <- fit_mongrel(sim_data, decomposition="cholesky", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
+  # double Mongrel iterations
+  iter <- 2L*iter
+  fit.mc <- fit_mongrel(sim_data, n_samples=iter, decomposition="cholesky", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
   cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",fit.mc$metadata$warmup_runtime,",",
     fit.mc$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
     fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
