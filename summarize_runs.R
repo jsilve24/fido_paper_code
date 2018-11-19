@@ -47,7 +47,7 @@ if(coord == "N") {
 	quit()
 }
 
-model_list <- c("SU", "SC", "ME", "MC")
+model_list <- c("SU", "SC", "ME", "MC", "CLM")
 
 per_chain_it <- as.integer(iter/2)
 percent_zero <- -1
@@ -86,14 +86,14 @@ for (m in model_list) {
 						} else if (m == "ME") {
 							warmup_runtime <- fit.me$metadata$warmup_runtime
 							total_runtime <- convert_to_seconds(fit.me$metadata$total_runtime)
-							cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter,
+							cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter*2,
 								",",0,",",percent_zero,",",fit.me$metadata$lambda_MSE,",",fit.me$metadata$outside_95CI,",",r,"\n",sep=""),
 								file=log_file, append=TRUE)
 							rm(fit.me)
 						} else if (m == "MC") {
 							warmup_runtime <- fit.mc$metadata$warmup_runtime
 							total_runtime <- convert_to_seconds(fit.mc$metadata$total_runtime)
-							cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter,
+							cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter*2,
 								",",0,",",percent_zero,",",fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",r,"\n",sep=""),
 								file=log_file, append=TRUE)
 							rm(fit.mc)

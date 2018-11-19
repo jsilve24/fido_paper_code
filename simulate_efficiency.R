@@ -20,7 +20,7 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 6) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm'}",
                    "{log file} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f} {opt: save_models}"))
-        # Rscript simulate_efficiency.R 10 10 5 1 mc output.log 0.002 50000 0.99 1e-10 FALSE
+        # Rscript simulate_efficiency.R 10 10 5 1 mc output.log 0.002 50000 0.99 1e-10 TRUE
 	# model 'clm' : conjugate linear model
 	#       'sc'  : Stan (collapsed)
 	#       'su'  : Stan (uncollapsed)
@@ -48,7 +48,7 @@ if (length(args) >= 9) {
 	b1 <- as.numeric(args[9])
 	eps_f <- as.numeric(args[10])
 }
-save_models <- FALSE
+save_models <- TRUE
 if (length(args) >= 11) {
 	save_models <- as.logical(args[11])
 }
