@@ -37,7 +37,7 @@ if($vary eq 'test') {
 }
 
 #my @methods = qw(me mc mcp sc su clm);
-my @methods = qw(clm mc me);
+my @methods = qw(clm);
 # 1 : Mongrel (eigendecomposition)
 # 2 : Mongrel (Cholesky)
 # 3 : Mongrel (Cholesky, partial)
@@ -68,7 +68,6 @@ for my $N (@N_vals) {
 				for my $m_idx (@methods) {
 
 					my $filename = 'scripts/'.$vary.'-varying_N'.$N.'_D'.$D.'_Q'.$Q.'_'.$m_idx.'.slurm';
-					my $logfile = 'run_'.$vary.'-varying.log';
 
 					open(my $fh, '>', $filename);
 
@@ -84,7 +83,7 @@ for my $N (@N_vals) {
 
 					print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
-					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$logfile.' 0.002 50000 0.99 1e-10'."\n";
+					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' 0.002 50000 0.99 1e-10'."\n";
 
 					close $fh;
 

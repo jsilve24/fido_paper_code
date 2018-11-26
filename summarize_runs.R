@@ -60,6 +60,13 @@ for(coord in coords) {
         for (q in Q_list) {
           for (r in R_list) {
             cat("Checking",m,"N=",n,"D=",d,"Q=",q,"R=",r,"...\n")
+            if(coord == "N") {
+              sweep_param_value <- n
+            } else if(coord == "D") {
+              sweep_param_value <- d
+            } else {
+              sweep_param_value <- q
+            }
             destfile <- paste("simulated_data/N",n,"_D",d,"_Q",q,"_R",r,".RData", sep="")
             if(file.exists(destfile)){
               # percent zero
@@ -74,29 +81,36 @@ for(coord in coords) {
               load(destfile)
               if (m == "SU") {
                 cat(paste("stan_uncollapsed,",fit.su$metadata$mean_ess,",",fit.su$metadata$warmup_runtime,",",
-                  fit.su$metadata$total_runtime,",",n,",",d,",",q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
+                  fit.su$metadata$total_runtime,",",coord,",",sweep_param_value,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
                   fit.su$metadata$lambda_MSE,",",fit.su$metadata$outside_95CI,",",r,"\n",sep=""),file=log_file,
                   append=TRUE)
                 rm(fit.su)
               } else if (m == "SC") {
                 cat(paste("stan_collapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
-                  fit.sc$metadata$total_runtime,",",n,",",d,",",q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
+                  fit.sc$metadata$total_runtime,",",coord,",",sweep_param_value,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
                   fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",r,"\n",sep=""),file=log_file, append=TRUE)
                 rm(fit.sc)
               } else if (m == "ME") {
                 warmup_runtime <- fit.me$metadata$warmup_runtime
                 total_runtime <- convert_to_seconds(fit.me$metadata$total_runtime)
-                cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter*2,
+                cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",coord,",",sweep_param_value,",",iter*2L,
                   ",",0,",",percent_zero,",",fit.me$metadata$lambda_MSE,",",fit.me$metadata$outside_95CI,",",r,"\n",sep=""),
                   file=log_file, append=TRUE)
                 rm(fit.me)
               } else if (m == "MC") {
                 warmup_runtime <- fit.mc$metadata$warmup_runtime
                 total_runtime <- convert_to_seconds(fit.mc$metadata$total_runtime)
-                cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",n,",",d,",",q,",",iter*2,
+                cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",coord,",",sweep_param_value,",",iter*2L,
                   ",",0,",",percent_zero,",",fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",r,"\n",sep=""),
                   file=log_file, append=TRUE)
                 rm(fit.mc)
+              } else if (m == "CLM") {
+                warmup_runtime <- fit.clm$metadata$warmup_runtime
+                total_runtime <- convert_to_seconds(fit.clm$metadata$total_runtime)
+                cat(paste("conjugate_linear_model,",fit.clm$metadata$mean_ess,",",warmup_runtime,",",total_runtime,",",coord,",",sweep_param_value,",",iter,
+                  ",",0,",",percent_zero,",",fit.clm$metadata$lambda_MSE,",",fit.clm$metadata$outside_95CI,",",r,"\n",sep=""),
+                  file=log_file, append=TRUE)
+                rm(fit.clm)
               }
             } else {
               cat("Error: data file",destfile,"doesn't exist!\n")

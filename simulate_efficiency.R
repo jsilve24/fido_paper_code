@@ -3,9 +3,10 @@ require(mongrel)
 source("src/fit_methods.R")
 source("src/dataset_methods.R")
 source("src/utils.R")
-source("src/fit_stan.R")
-source("src/plotting.R")
 source("src/fit_mongrel.R")
+source("src/fit_stan.R")
+source("src/fit_CLM.R")
+source("src/plotting.R")
 source("src/GH_standalone.R")
 
 options(mc.cores = parallel::detectCores())
@@ -17,10 +18,10 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 #devtools::load_all("C:/Users/kim/Documents/mongrel")
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 6) {
+if (length(args) < 5) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm'}",
-                   "{log file} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f} {opt: save_models}"))
-        # Rscript simulate_efficiency.R 10 10 5 1 mc output.log 0.002 50000 0.99 1e-10 TRUE
+                   "{opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f} {opt: save_models}"))
+        # Rscript simulate_efficiency.R 10 10 5 1 mc 0.002 50000 0.99 1e-10
 	# model 'clm' : conjugate linear model
 	#       'sc'  : Stan (collapsed)
 	#       'su'  : Stan (uncollapsed)
@@ -35,7 +36,6 @@ D <- as.integer(args[2])
 Q <- as.integer(args[3])
 rseed <- as.integer(args[4])
 model <- args[5]
-log_file <- args[6]
 
 step_size <- 0.003
 max_iter <- 10000
@@ -43,14 +43,10 @@ b1 <- 0.9
 eps_f <- 1e-10
 calcPartialHess <- FALSE
 if (length(args) >= 9) {
-	step_size <- as.numeric(args[7])
-	max_iter <- as.integer(args[8])
-	b1 <- as.numeric(args[9])
-	eps_f <- as.numeric(args[10])
-}
-save_models <- TRUE
-if (length(args) >= 11) {
-	save_models <- as.logical(args[11])
+	step_size <- as.numeric(args[6])
+	max_iter <- as.integer(args[7])
+	b1 <- as.numeric(args[8])
+	eps_f <- as.numeric(args[9])
 }
 
 iter <- 2000L
@@ -65,14 +61,12 @@ writeLines(c("\nUsing parameter values",
              paste("\tQ:",Q),
              paste("\trseed:",rseed),
              paste("\tmodel:",model),
-             paste("\tlog_file:",log_file),
              paste("\tstep_size:",step_size),
              paste("\tmax_iter:",max_iter),
              paste("\tb1:",b1),
              paste("\teps_f:",eps_f),
              paste("\tcalcPartialHess:",calcPartialHess),
-             paste("\titer:",iter),
-             paste("\tsave_models:",save_models)
+             paste("\titer:",iter)
           ))
 
 model_save_dir = "fitted_models"
@@ -93,11 +87,8 @@ print(paste("Percent zero counts: ",percent_zero,sep=""))
 # analysis ----------------------------------------------------------------
 
 if(model == 'clm') {
-  eta.hat <- t(driver::alr(t(sim_data$Y+0.65)))
-  fit.clm <- conjugateLinearModel(eta.hat, sim_data$X, sim_data$Theta, sim_data$Gamma, sim_data$Xi, sim_data$upsilon, n_samples=iter)
-  if(save_models) {
-    save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  fit.clm <- fit_CLM(sim_data, n_samples=iter)
+  save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 
   if(FALSE) {
     # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
@@ -111,64 +102,37 @@ if(model == 'clm') {
       Lambdas[,,i] <- temp$Lambda
     }
     fit.u$Lambda <- Lambdas
-    if(save_models) {
-      save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-    }
+    save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
   }
 }
 
 if(model == 'sc') {
   per_chain_it <- as.integer(iter/2)
   fit.sc <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE, iter=per_chain_it)
-  cat(paste("stan_collapsed,",fit.sc$metadata$mean_ess,",",fit.sc$metadata$warmup_runtime,",",
-    fit.sc$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
-    fit.sc$metadata$lambda_MSE,",",fit.sc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  if(save_models) {
-    save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'su') {
   per_chain_it <- as.integer(iter/2)
   fit.su <- fit_mstan(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=per_chain_it)
-  cat(paste("stan_uncollapsed,",fit.su$metadata$mean_ess,",",fit.su$metadata$warmup_runtime,",",
-    fit.su$metadata$total_runtime,",",N,",",D,",",Q,",",(4*per_chain_it),",",(2*per_chain_it),",",percent_zero,",",
-    fit.su$metadata$lambda_MSE,",",fit.su$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  if(save_models) {
-    save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'me') {
   # double Mongrel iterations
   iter <- 2L*iter
   fit.me <- fit_mongrel(sim_data, n_samples=iter, decomposition="eigen", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
-  cat(paste("mongrel_eigen,",fit.me$metadata$mean_ess,",",fit.me$metadata$warmup_runtime,",",
-    fit.me$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
-    fit.me$metadata$lambda_MSE,",",fit.me$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  if(save_models) {
-    save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'mc') {
   # double Mongrel iterations
   iter <- 2L*iter
   fit.mc <- fit_mongrel(sim_data, n_samples=iter, decomposition="cholesky", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
-  cat(paste("mongrel_cholesky,",fit.mc$metadata$mean_ess,",",fit.mc$metadata$warmup_runtime,",",
-    fit.mc$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
-    fit.mc$metadata$lambda_MSE,",",fit.mc$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  if(save_models) {
-    save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'mcp') {
   fit.mcp <- fit_mongrel(sim_data, decomposition="cholesky", step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f, calcPartialHess=TRUE)
-  cat(paste("mongrel_cholesky_partial,",fit.mcp$metadata$mean_ess,",",fit.mcp$metadata$warmup_runtime,",",
-    fit.mcp$metadata$total_runtime,",",N,",",D,",",Q,",",iter,",",0,",",percent_zero,",",
-    fit.mcp$metadata$lambda_MSE,",",fit.mcp$metadata$outside_95CI,",",rseed,"\n",sep=""),file=log_file, append=TRUE)
-  if(save_models) {
-    save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
-  }
+  save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
