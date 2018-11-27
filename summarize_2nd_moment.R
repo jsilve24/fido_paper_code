@@ -129,36 +129,36 @@ for(vary in varying) {
             mse.clm <- mse.clm / length(L.sd.full[[R]])
 
             if(SU_as_baseline) {
-              cat(paste(paste("Stan (uncollapsed)",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+              cat(paste(paste("stan_uncollapsed",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
               if(!is.null(fit.sc)) {
-                cat(paste(paste("Stan (collapsed)",vary,parameter_value,mse.sc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+                cat(paste(paste("stan_collapsed",vary,parameter_value,mse.sc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
               }
             } else {
-              cat(paste(paste("Stan (collapsed)",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+              cat(paste(paste("stan_collapsed",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
             }
             if(!is.null(fit.mc)) {
-            	cat(paste(paste("Mongrel (Cholesky)",vary,parameter_value,mse.mc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            	cat(paste(paste("mongrel_cholesky",vary,parameter_value,mse.mc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
             }
             if(!is.null(fit.clm)) {
-            	cat(paste(paste("Conjugate linear model",vary,parameter_value,mse.clm,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            	cat(paste(paste("conjugate_linear_model",vary,parameter_value,mse.clm,sep=","),"\n",sep=""), file=log_file, append=TRUE)
             }
           }
 
         }
         if(combine_replicates) {
           if(SU_as_baseline) {
-          	cat(paste(paste("Stan (uncollapsed)",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          	cat(paste(paste("stan_uncollapsed",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
             if(!is.null(fit.sc)) {
-            	cat(paste(paste("Stan (collapsed)",vary,parameter_value,mse.sc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            	cat(paste(paste("stan_collapsed",vary,parameter_value,mse.sc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
             }
           } else {
-          	cat(paste(paste("Stan (collapsed)",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          	cat(paste(paste("stan_collapsed",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }
           if(!is.null(fit.mc)) {
-          	cat(paste(paste("Mongrel (Cholesky)",vary,parameter_value,mse.mc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          	cat(paste(paste("mongrel_cholesky",vary,parameter_value,mse.mc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }
           if(!is.null(fit.clm)) {
-          	cat(paste(paste("Conjugate linear model",vary,parameter_value,mse.clm,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          	cat(paste(paste("conjugate_linear_model",vary,parameter_value,mse.clm,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }
         }
       }
