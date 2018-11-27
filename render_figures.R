@@ -95,16 +95,24 @@ render_F1 <- function() {
   ggsave("figure_drafts/F1.png", plot=p, width=10, height=8, units="in")  
 }
 
-render_F2 <- function() {
+render_F2 <- function(use_stan_collapsed=TRUE) {
   # fix log name
-  dat <- read.csv("second_moment_data.log")
+  if(use_stan_collapsed) {
+    dat <- read.csv("second_moment_data_SCbaseline.log")
+  } else {
+    dat <- read.csv("second_moment_data_SUbaseline.log")
+  }
 
   # render once including the conjugate linear model
   p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
     geom_point() +
     scale_x_log10()
   p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
-  ggsave("figure_drafts/F2_wCLM.png", plot=p, width=10, height=4, units="in")
+  if(use_stan_collapsed) {
+    ggsave("figure_drafts/F2_CLM_SCbaseline.png", plot=p, width=10, height=4, units="in")
+  } else {
+    ggsave("figure_drafts/F2_CLM_SUbaseline.png", plot=p, width=10, height=4, units="in")
+  }
   
   # render once without CLM
   dat_filtered <- filter(dat, !(model %in% c("conjugate_linear_model")))
@@ -112,7 +120,11 @@ render_F2 <- function() {
     geom_point() +
     scale_x_log10()
   p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
-  ggsave("figure_drafts/F2.png", plot=p, width=10, height=4, units="in")
+  if(use_stan_collapsed) {
+    ggsave("figure_drafts/F2_SCbaseline.png", plot=p, width=10, height=4, units="in")
+  } else {
+    ggsave("figure_drafts/F2_SUbaseline.png", plot=p, width=10, height=4, units="in")
+  }
   rm(dat)
   rm(dat_filtered)
 }
@@ -185,5 +197,6 @@ render_SF1 <- function() {
 
 render_F1()
 render_F2()
+render_F2(use_stan_collapsed=FALSE)
 render_SF1()
 
