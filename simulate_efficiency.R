@@ -69,7 +69,7 @@ writeLines(c("\nUsing parameter values",
              paste("\titer:",iter)
           ))
 
-model_save_dir = "fitted_models"
+model_save_dir = "fitted_models_timed"
 
 # simulation --------------------------------------------------------------
 

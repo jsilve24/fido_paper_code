@@ -9,7 +9,11 @@ SU_as_baseline <- FALSE
 # FALSE : use Stan (collapsed) as our baseline; may want to use because Stan (uncollapsed) fails to finish in
 #    many cases, meaning we have no baseline!
 
-log_file <- "second_moment_data.log"
+if(SU_as_baseline) {
+  log_file <- "second_moment_data_SUbaseline.log"
+} else {
+  log_file <- "second_moment_data_SCbaseline.log"
+}
 cat("model,sweep_param,sweep_value,sd_MSE\n", file=log_file)
 
 varying <- c("N", "D", "Q")

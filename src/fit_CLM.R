@@ -5,12 +5,7 @@ source("src/utils.R")
 
 # main  function ---------------------------------------------------
 
-#' Fit multinomial model using mongrel
-#' 
-#' WARNING: Req that your current working directory is main folder
-#'  "mongrel_paper_code"
-#'  
-#' WARNING: Currently uses a random seed... 
+#' Fit conjugate linear model
 #' 
 #' @param mdataset an mdataset object
 #' @param n_samples number of samples to draw
@@ -19,15 +14,11 @@ source("src/utils.R")
 #' @param ret_mongrelfit return mongrelfit instead of mfit object (default:FALSE)
 #' @param ... other parameters passed to function mongrel
 #' @return mfit object (returns mongrelfit if ret_mongrelfit)
-fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mongrelfit=FALSE, ...){
-
+fit_CLM <- function(mdataset, n_samples=2000, ...) {
+  eta.hat <- t(driver::alr(t(mdataset$Y+0.65)))
   start_time <- Sys.time()
-  fit <- mongrel(Y=mdataset$Y, X=mdataset$X, upsilon=mdataset$upsilon, 
-                 Theta=mdataset$Theta, Gamma=mdataset$Gamma, Xi=mdataset$Xi, 
-                 init=random_mongrel_init(mdataset$Y), 
-                 decomp_method=decomposition, n_samples=n_samples,  ...)
+  fit <- conjugateLinearModel(eta.hat, mdataset$X, mdataset$Theta, mdataset$Gamma, mdataset$Xi, mdataset$upsilon, n_samples=n_samples)
   end_time <- Sys.time()
-  if (ret_mongrelfit) return(fit)
 
   total_runtime <- end_time - start_time
 
@@ -51,8 +42,7 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
             Sigma=fit$Sigma,
             mdataset=mdataset,
             metadata=metadata)
-  m$Eta <- fit$Eta
-  m$Timer <- fit$Timer
+  # no Eta
   return(m)
 }
 

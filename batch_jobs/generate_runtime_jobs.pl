@@ -10,7 +10,7 @@ my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $vary = 'Q';
+my $vary = 'N';
 
 open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
@@ -21,7 +21,8 @@ if($vary eq 'test') {
 	@Q_vals = qw(500);
 } elsif($vary eq 'N') {
 	# varying N
-	@N_vals = qw(10 20 30 50 100 250 500 750 1000);
+#	@N_vals = qw(3 5 10 20 30 50 100 250 500 750 1000);
+	@N_vals = qw(3 5);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
@@ -36,8 +37,8 @@ if($vary eq 'test') {
 	@Q_vals = qw(2 4 10 20 50 75 100 250 500);
 }
 
-#my @methods = qw(me mc mcp sc su clm);
-my @methods = qw(clm);
+my @methods = qw(me mc sc su clm);
+#my @methods = qw(mc me);
 # 1 : Mongrel (eigendecomposition)
 # 2 : Mongrel (Cholesky)
 # 3 : Mongrel (Cholesky, partial)
