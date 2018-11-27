@@ -1,59 +1,57 @@
-require(ggplot2)
 library(dplyr)
 library(grid)
 library(gridExtra)
+library(driver)
+library(ggplot2)
+library(purrr)
+library(ggstance)
 
-use_legend <- TRUE
-
-figure_no <- 1
-
-apply_common_settings <- function(p, use_legend=FALSE, strip_ylabels=FALSE, horiz=FALSE) {
-  p <- p + theme_minimal() +
-    theme(panel.border = element_rect(color="black", fill=NA, size=0.5)) + 
-    xlab("") +
-    ylab("")
+apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE) {
+  # apply grid
   if(horiz) {
-    p <- p + facet_grid(. ~ sweep_param, scales="free")
+    p <- base_p + facet_grid(. ~ sweep_param, scales="free_x")
   } else {
-    p <- p + facet_grid(sweep_param ~ ., scales="free")
+    p <- base_p + facet_grid(sweep_param ~ ., scales="free_y")
   }
-  p <- p + theme(panel.spacing = unit(2, "lines")) +
+
+  # spacing
+  p <- p + theme(panel.spacing = unit(0.5, "lines")) +
     theme(aspect.ratio = 1) +
     theme(plot.margin=unit(c(0,0,0,0),"pt"))
-  if(strip_ylabels) {
-    p <- p + theme(strip.text.y = element_blank())
-  } else {
-    if(horiz) {
-      p <- p + theme(strip.text.x = element_text(angle=0, face="bold", size=14))
-    } else {
-      p <- p + theme(strip.text.y = element_text(angle=0, face="bold", size=14))
-    }
-  }
-  if(use_legend) {
-    p <- p + theme(legend.position="bottom") +
-      theme(legend.position="bottom",legend.direction="vertical") + 
-      theme(legend.title = element_blank()) +
-      theme(legend.text = element_text(size=7))
-  } else {
-    p <- p + theme(legend.position="none")
-  }
+
+  # apply theme and border
+  p <- p + theme_minimal() +
+    theme(panel.border = element_rect(color="black", fill=NA, size=0.5))
+
+  # remove legend and labels
+  p <- p + theme(legend.position="none") +
+    xlab("") +
+    ylab("") +
+    theme(strip.text.x = element_blank()) +
+    theme(strip.text.y = element_blank())
+
   return(p)
 }
 
-if(figure_no == 1) {
-  dat <- read.csv("all_output.txt")
-
-  # just grab zeros from one model
-  zeros <- filter(dat, model == "Mongrel (Cholesky)")
-
-  p1 <- zeros %>% 
+render_F1_C1 <- function(dat) {
+  # just grab zeros from one model, they're (verifiably) all the same
+  zeros <- filter(dat, model == "mongrel_cholesky")
+  p <- zeros %>% 
     ggplot(aes(x=sweep_value, y=percent_zero)) +
     geom_point() +
     scale_x_log10() +
     ylim(0, 1)
-  p1 <- apply_common_settings(p1, use_legend=use_legend, strip_ylabels=TRUE)
+  p <- apply_common_settings(p)
+  return(p)
+}
 
-  p2 <- dat %>% 
+render_F1_C2 <- function(dat, use_CLM=FALSE) {
+  # dat includes: SU, SC, ME, MC, CLM
+  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
+  if(!use_CLM) {
+    dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
+  }
+  p <- dat_filtered %>% 
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
     ggplot(aes(x=sweep_value, y=SpES, color=model)) +
     geom_point() + 
@@ -63,28 +61,129 @@ if(figure_no == 1) {
       breaks = scales::trans_breaks("log10", function(x) 10^x),
       labels = scales::trans_format("log10", scales::math_format(10^.x))
     )
-  p2 <- apply_common_settings(p2, use_legend=use_legend, strip_ylabels=TRUE)
+  p <- apply_common_settings(p)
+  return(p)
+}
 
-  p3 <- dat %>% 
+render_F1_C3 <- function(dat, use_CLM=FALSE) {
+  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
+  if(!use_CLM) {
+    dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
+  }
+  p <- dat_filtered %>% 
     ggplot(aes(x=sweep_value, y=lambda_MSE, color=model)) +
     geom_point() +
     scale_x_log10()
-  p3 <- apply_common_settings(p3, use_legend=use_legend)
-
-  p <- grid.arrange(p1, p2, p3, nrow=1)
-  p
-#  ggsave("figure_drafts/F1.png", plot=p, dpi=300, width=11, height=10, units="in")
+  p <- apply_common_settings(p)
+  return(p)
 }
 
-if(figure_no == 2) {
-  data <- read.csv("second_moment_data.log")
+render_F1 <- function() {
+  dat <- read.csv("all_output.log")
+  c1 <- render_F1_C1(dat)
 
-  p <- ggplot(data, aes(x=sweep_value, y=sd_MSE, color=model)) +
+  # render once including conjugate linear model
+  c2 <- render_F1_C2(dat, use_CLM=TRUE)
+  c3 <- render_F1_C3(dat, use_CLM=TRUE)
+  p <- grid.arrange(c1, c2, c3, nrow=1)
+  ggsave("figure_drafts/F1_wCLM.png", plot=p, width=10, height=8, units="in")  
+
+  # render once without
+  c2 <- render_F1_C2(dat)
+  c3 <- render_F1_C3(dat)
+  p <- grid.arrange(c1, c2, c3, nrow=1)
+  ggsave("figure_drafts/F1.png", plot=p, width=10, height=8, units="in")  
+}
+
+render_F2 <- function() {
+  # fix log name
+  dat <- read.csv("second_moment_data.log")
+
+  # render once including the conjugate linear model
+  p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
     geom_point() +
     scale_x_log10()
-  p <- apply_common_settings(p, use_legend=FALSE, strip_ylabels=FALSE, horiz=TRUE)
-  p
-  ggsave("figure_drafts/F2.png", plot=p, dpi=300, width=11, height=4, units="in")
-
-  # combine replicates?
+  p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
+  ggsave("figure_drafts/F2_wCLM.png", plot=p, width=10, height=4, units="in")
+  
+  # render once without CLM
+  dat_filtered <- filter(dat, !(model %in% c("conjugate_linear_model")))
+  p <- ggplot(dat_filtered, aes(x=sweep_value, y=sd_MSE, color=model)) +
+    geom_point() +
+    scale_x_log10()
+  p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
+  ggsave("figure_drafts/F2.png", plot=p, width=10, height=4, units="in")
+  rm(dat)
+  rm(dat_filtered)
 }
+
+subset_Lambda <- function(mfits, lower, upper) {
+  Lambda_true <- mfits$mongrel_cholesky$mdataset$Lambda_true[ll:ul,ll:ul]
+  mfits$mongrel_cholesky$Lambda <- mfits$mongrel_cholesky$Lambda[ll:ul,ll:ul,]
+  mfits$stan_collapsed$Lambda <- mfits$stan_collapsed$Lambda[ll:ul,ll:ul,]
+  mfits$stan_uncollapsed$Lambda <- mfits$stan_uncollapsed$Lambda[ll:ul,ll:ul,]
+  mfits$conjugate_linear_model$Lambda <- mfits$conjugate_linear_model$Lambda[ll:ul,ll:ul,]
+  return(list("Lambda_true"=Lambda_true, "mfits"=mfits))
+}
+
+plot_posterior_intervals <- function(mfits, ll, ul, image_filename=NULL) {
+  Lambda_true <- mfits$mongrel_cholesky$mdataset$Lambda_true[ll:ul,ll:ul]
+  mfits$mongrel_cholesky$Lambda <- mfits$mongrel_cholesky$Lambda[ll:ul,ll:ul,]
+  mfits$stan_collapsed$Lambda <- mfits$stan_collapsed$Lambda[ll:ul,ll:ul,]
+  mfits$stan_uncollapsed$Lambda <- mfits$stan_uncollapsed$Lambda[ll:ul,ll:ul,]
+  mfits$conjugate_linear_model$Lambda <- mfits$conjugate_linear_model$Lambda[ll:ul,ll:ul,]
+
+  lt <- gather_array(Lambda_true, value, coord, covariate)
+  p <- mfits %>% 
+    map("Lambda") %>% 
+    map(gather_array, value, coord, covariate, iter) %>%
+    bind_rows(.id = "Model") %>% 
+    group_by(Model, coord, covariate) %>% 
+    summarise_posterior(value) %>% 
+    ungroup() %>% 
+    ggplot(aes(x=mean, y=coord)) +
+    geom_segment(data=lt, aes(x=value, xend=value, y=coord-.3, yend=coord+.3)) +
+    geom_pointrangeh(aes(xmin=p2.5, xmax=p97.5, color=Model), 
+                     position=position_dodge2v(height=.3)) +
+    facet_grid(coord ~ covariate, scales="free_y") +
+    ylab("Coordinate") +
+    theme_minimal() +
+    theme(axis.title.x=element_blank()) +
+    theme(axis.title.y=element_blank()) +
+    theme(axis.text.y=element_blank()) +
+    theme(strip.text.x=element_blank()) + 
+    theme(strip.text.y=element_blank()) + 
+    theme(panel.spacing=unit(0.5, "lines")) +
+    theme(legend.position="none") +
+    theme(panel.border = element_rect(color="black", fill=NA, size=0.5))
+  if(!is.null(image_filename)) {
+    ggsave(image_filename, plot=p, width=8, height=8, dpi=300)
+  }
+}
+
+render_SF1 <- function() {
+ load("fitted_models/MC_N100_D30_Q250_R1.RData")
+ load("fitted_models/SC_N100_D30_Q250_R1.RData")
+ load("fitted_models/SU_N100_D30_Q250_R1.RData")
+ load("fitted_models/CLM_N100_D30_Q250_R1.RData")
+ mfits <- list("mongrel_cholesky"=fit.mc,
+               "stan_collapsed"=fit.sc,
+               "stan_uncollapsed"=fit.su,
+               "conjugate_linear_model"=fit.clm)
+ plot_posterior_intervals(mfits, 1, 5, image_filename="figure_drafts/SF1_fail_case.png")
+
+  load("fitted_models/MC_N30_D30_Q5_R1.RData")
+  load("fitted_models/SC_N30_D30_Q5_R1.RData")
+  load("fitted_models/SU_N30_D30_Q5_R1.RData")
+  load("fitted_models/CLM_N30_D30_Q5_R1.RData")
+  mfits <- list("mongrel_cholesky"=fit.mc,
+                "stan_collapsed"=fit.sc,
+                "stan_uncollapsed"=fit.su,
+                "conjugate_linear_model"=fit.clm)
+  plot_posterior_intervals(mfits, 1, 5, image_filename="figure_drafts/SF1_good_case.png")
+}
+
+render_F1()
+render_F2()
+render_SF1()
+
