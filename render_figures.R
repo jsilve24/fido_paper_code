@@ -1,23 +1,29 @@
 library(dplyr)
-library(grid)
-library(gridExtra)
+# library(grid)
+# library(gridExtra)
 library(driver)
 library(ggplot2)
 library(purrr)
 library(ggstance)
+library(ggpubr)
+library(RColorBrewer)
 
-apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE) {
+apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE, share_y=FALSE) {
   # apply grid
   if(horiz) {
     p <- base_p + facet_grid(. ~ sweep_param, scales="free_x")
   } else {
-    p <- base_p + facet_grid(sweep_param ~ ., scales="free_y")
+    if(share_y) {
+      p <- base_p + facet_grid(sweep_param ~ .)
+    } else {
+      p <- base_p + facet_grid(sweep_param ~ ., scales="free_y")
+    }
   }
 
   # spacing
   p <- p + theme(panel.spacing = unit(0.5, "lines")) +
-    theme(aspect.ratio = 1) +
     theme(plot.margin=unit(c(0,0,0,0),"pt"))
+    # theme(aspect.ratio = 1)
 
   # apply theme and border
   p <- p + theme_minimal() +
@@ -26,29 +32,37 @@ apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE) {
   if(!use_legend) {
     p <- p + theme(legend.position="none")
   }
-  
+
   # remove legend and labels
   p <- p + xlab("") +
     ylab("") +
     theme(strip.text.x = element_blank()) +
     theme(strip.text.y = element_blank())
 
+  my_colors <- brewer.pal(4, "Set1")
+  names(my_colors) <- c("mongrel_cholesky", "stan_collapsed", "stan_uncollapsed", "conjugate_linear_model")
+  col_scale <- scale_colour_manual(name="model", values=my_colors)
+  # fix colors
+  # p <- p + scale_colour_brewer(palette = "Set1")
+  p <- p + col_scale
+
   return(p)
 }
 
-render_F1_C1 <- function(dat) {
+render_F1_C1 <- function(dat, use_legend=FALSE) {
   # just grab zeros from one model, they're (verifiably) all the same
   zeros <- filter(dat, model == "mongrel_cholesky")
   p <- zeros %>% 
     ggplot(aes(x=sweep_value, y=percent_zero)) +
     geom_point() +
+    geom_smooth(method="loess", se=FALSE, color="black") +
     scale_x_log10() +
     ylim(0, 1)
-  p <- apply_common_settings(p)
+  p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
 
-render_F1_C2 <- function(dat, use_CLM=FALSE) {
+render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
   # dat includes: SU, SC, ME, MC, CLM
   dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
   if(!use_CLM) {
@@ -58,17 +72,17 @@ render_F1_C2 <- function(dat, use_CLM=FALSE) {
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
     ggplot(aes(x=sweep_value, y=SpES, color=model)) +
     geom_point() + 
-    geom_smooth(method="lm") +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x),
       labels = scales::trans_format("log10", scales::math_format(10^.x))
     )
-  p <- apply_common_settings(p)
+  p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
 
-render_F1_C3 <- function(dat, use_CLM=FALSE) {
+render_F1_C3 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
   dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
   if(!use_CLM) {
     dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
@@ -76,60 +90,51 @@ render_F1_C3 <- function(dat, use_CLM=FALSE) {
   p <- dat_filtered %>% 
     ggplot(aes(x=sweep_value, y=lambda_MSE, color=model)) +
     geom_point() +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10()
-  p <- apply_common_settings(p)
+  p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
 
-render_F1 <- function() {
-  dat <- read.csv("all_output.log")
-  c1 <- render_F1_C1(dat)
-
-  # render once including conjugate linear model
-  c2 <- render_F1_C2(dat, use_CLM=TRUE)
-  c3 <- render_F1_C3(dat, use_CLM=TRUE)
-  p <- grid.arrange(c1, c2, c3, nrow=1)
-  ggsave("figure_drafts/F1_wCLM.png", plot=p, width=10, height=8, units="in")  
-
-  # render once without
-  c2 <- render_F1_C2(dat)
-  c3 <- render_F1_C3(dat)
-  p <- grid.arrange(c1, c2, c3, nrow=1)
-  ggsave("figure_drafts/F1.png", plot=p, width=10, height=8, units="in")  
-}
-
-render_F2 <- function(use_stan_collapsed=TRUE) {
-  # fix log name
-  if(use_stan_collapsed) {
-    dat <- read.csv("second_moment_data_SCbaseline.log")
-  } else {
-    dat <- read.csv("second_moment_data_SUbaseline.log")
-  }
-
-  # render once including the conjugate linear model
-  p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
-    geom_point() +
-    scale_x_log10()
-  p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
-  if(use_stan_collapsed) {
-    ggsave("figure_drafts/F2_CLM_SCbaseline.png", plot=p, width=10, height=4, units="in")
-  } else {
-    ggsave("figure_drafts/F2_CLM_SUbaseline.png", plot=p, width=10, height=4, units="in")
+render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE) {
+  dat <- read.csv("second_moment_data.log")
+  if(!use_CLM) {
+    dat <- filter(dat, !(model %in% c("conjugate_linear_model")))
   }
   
-  # render once without CLM
-  dat_filtered <- filter(dat, !(model %in% c("conjugate_linear_model")))
-  p <- ggplot(dat_filtered, aes(x=sweep_value, y=sd_MSE, color=model)) +
+  p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
     geom_point() +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10()
-  p <- apply_common_settings(p, use_legend=FALSE, horiz=TRUE)
-  if(use_stan_collapsed) {
-    ggsave("figure_drafts/F2_SCbaseline.png", plot=p, width=10, height=4, units="in")
+
+  p <- apply_common_settings(p, use_legend=use_legend, share_y=TRUE)
+  return(p)
+}
+
+render_F1 <- function(use_legend=FALSE) {
+  dat <- read.csv("all_output.log")
+  c1 <- render_F1_C1(dat, use_legend=FALSE)
+
+  # render without CLM
+  c2 <- render_F1_C2(dat, use_legend=use_legend)
+  c3 <- render_F1_C3(dat, use_legend=use_legend)
+  c4 <- render_F1_C4(use_legend=use_legend)
+  if(use_legend) {
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1.5, 1.5, 1.5))
+    ggsave("figure_drafts/F1.png", plot=p, width=17, height=8, units="in")  
   } else {
-    ggsave("figure_drafts/F2_SUbaseline.png", plot=p, width=10, height=4, units="in")
+    p <- ggarrange(c1, c2, c3, c4, ncol=3, nrow=1, widths = c(1, 1, 1, 1))
+    ggsave("figure_drafts/F1.png", plot=p, width=10, height=8, units="in")  
   }
-  rm(dat)
-  rm(dat_filtered)
+}
+
+render_S1 <- function(use_legend=FALSE) {
+  p <- render_F1_C4(use_CLM=TRUE, use_legend=use_legend)
+  if(use_legend) {
+    ggsave("figure_drafts/S1.png", plot=p, width=5, height=8, units="in")
+  } else {
+    ggsave("figure_drafts/S1.png", plot=p, width=8, height=8, units="in")
+  }
 }
 
 subset_Lambda <- function(mfits, lower, upper) {
@@ -213,9 +218,10 @@ render_S2 <- function() {
   ggsave("figure_drafts/SF2_optimization_percent.png", plot=p, width=8, height=2.5, dpi=300)
 }
 
-#render_F1()
-#render_F2()
+render_F1(use_legend=TRUE)
+render_S1(use_legend=TRUE)
+# render_F2()
 #render_F2(use_stan_collapsed=FALSE)
 #render_SF1()
-render_S2()
+#render_S2()
 
