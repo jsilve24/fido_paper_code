@@ -106,10 +106,13 @@ render_F1_C3 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
   return(p)
 }
 
-render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE) {
+render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
   dat <- read.csv("second_moment_data.log")
   if(!use_CLM) {
     dat <- filter(dat, !(model %in% c("conjugate_linear_model")))
+  }
+  if(Q_only) {
+    dat <- filter(dat, sweep_param=="Q")
   }
   
   p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
@@ -134,18 +137,18 @@ render_F1 <- function(use_legend=FALSE) {
     p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1.5, 1.5, 1.5))
     ggsave("figure_drafts/legends/F1.png", plot=p, width=17, height=8, units="in")  
   } else {
-    p <- ggarrange(c1, c2, c3, c4, ncol=3, nrow=1, widths = c(1, 1, 1, 1))
-    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=8, units="in")  
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1))
+    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")  
   }
 }
 
 render_S1 <- function(use_legend=FALSE) {
   cat("Rendering Supplemental Figure 1\n")
-  p <- render_F1_C4(use_CLM=TRUE, use_legend=use_legend)
+  p <- render_F1_C4(use_CLM=TRUE, use_legend=use_legend, Q_only=TRUE)
   if(use_legend) {
-    ggsave("figure_drafts/legends/S1.png", plot=p, width=5, height=8, units="in")
+    ggsave("figure_drafts/legends/S1.png", plot=p, width=5, height=3, units="in")
   } else {
-    ggsave("figure_drafts/no_legends/S1.png", plot=p, width=8, height=8, units="in")
+    ggsave("figure_drafts/no_legends/S1.png", plot=p, width=4, height=4, units="in")
   }
 }
 
@@ -269,8 +272,15 @@ render_S3 <- function(use_legend=FALSE) {
   }
 }
 
-render_F1(use_legend=TRUE)
-render_S1(use_legend=TRUE)
-render_S2(use_legend=TRUE)
-render_S3(use_legend=TRUE)
+use_l <- FALSE
+render_F1(use_legend=use_l)
+render_S1(use_legend=use_l)
+render_S2(use_legend=use_l)
+render_S3(use_legend=use_l)
+
+use_l <- TRUE
+render_F1(use_legend=use_l)
+render_S1(use_legend=use_l)
+render_S2(use_legend=use_l)
+render_S3(use_legend=use_l)
 
