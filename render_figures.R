@@ -276,15 +276,15 @@ render_S3 <- function(use_legend=FALSE) {
   }
 }
 
-# use_l <- FALSE
-# render_F1(use_legend=use_l)
-# render_S1(use_legend=use_l)
-# render_S2(use_legend=use_l)
-# render_S3(use_legend=use_l)
+use_l <- FALSE
+render_F1(use_legend=use_l)
+render_S1(use_legend=use_l)
+render_S2(use_legend=use_l)
+render_S3(use_legend=use_l)
 
 use_l <- TRUE
 render_F1(use_legend=use_l)
-# render_S1(use_legend=use_l)
-# render_S2(use_legend=use_l)
-# render_S3(use_legend=use_l)
+render_S1(use_legend=use_l)
+render_S2(use_legend=use_l)
+render_S3(use_legend=use_l)
 
