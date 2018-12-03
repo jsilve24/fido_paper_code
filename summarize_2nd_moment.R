@@ -6,7 +6,7 @@ source("src/dataset_methods.R")
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 2) {
         stop(paste("Usage: Rscript summarize_2nd_moment.R {varying parameter} {output file}"))
-        # Rscript summarize_2nd_moment.R N second_moment_data.log
+        # Rscript summarize_2nd_moment.R N output.log
 }
 
 # need a try/catch here
