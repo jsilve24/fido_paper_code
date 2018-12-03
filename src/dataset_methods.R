@@ -166,10 +166,18 @@ verify.mdataset <- function(m, ...){
 
 
 # internal
-# gets the Euclidean distance between a (vectorized) Lambda matrix and Lambda_true
-sample_SE <- function(x,y) {
-  (x-y)**2
+get_Lambda_MSE <- function(Lambda_true, Lambda_estimated, RMSE=TRUE) {
+  ref <- c(Lambda_true)
+  estimates <- Lambda_estimated
+  dim(estimates) <- c(dim(Lambda_estimated)[1]*dim(Lambda_estimated)[2],dim(Lambda_estimated)[3])
+  MSE <- mean(apply(estimates, 2, function(x, y) { (x-y)**2 }, y=ref))
+  if(RMSE) {
+    return(sqrt(MSE))
+  } else {
+    return(MSE)
+  }
 }
+
 lambda_outside_bounds <- function(x) {
   # x[1] is the 0.025 quantile
   # x[2] is the 0.975 quantile
@@ -179,4 +187,15 @@ lambda_outside_bounds <- function(x) {
   }
   return(0)
 }
+
+get_95CI <- function(Lambda_true, Lambda_estimated) {
+  ref <- c(Lambda_true)
+  intervals <- apply(Lambda_estimated, c(1,2), function(x) quantile(x, probs=c(0.025, 0.975)))
+  lower <- c(intervals[1,,])
+  upper <- c(intervals[2,,])
+  return(sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/(dim(Lambda_true)[1]*dim(Lambda_true)[2]))
+}
+
+
+
 

@@ -19,15 +19,19 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
-        stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm'}",
+        stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm','svbcm','svbcf','svbum','svbuf'}",
                    "{opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f} {opt: save_models}"))
         # Rscript simulate_efficiency.R 10 10 5 1 mc 0.002 50000 0.99 1e-10
-	# model 'clm' : conjugate linear model
-	#       'sc'  : Stan (collapsed)
-	#       'su'  : Stan (uncollapsed)
-	#       'me'  : Mongrel (eigendecomposition)
-	#       'mc'  : Mongrel (Cholesky)
-	#       'mcp' : Mongrel (Cholesky), partial (multinomial) Hessian
+	# model 'clm'   : conjugate linear model
+	#       'sc'    : Stan (collapsed)
+	#       'su'    : Stan (uncollapsed)
+	#       'me'    : Mongrel (eigendecomposition)
+	#       'mc'    : Mongrel (Cholesky)
+	#       'mcp'   : Mongrel (Cholesky), partial (multinomial) Hessian
+	#	'svbcm'   : Stan (collapsed) - variational Bayes, meanfield
+	#	'svbcf'   : Stan (collapsed) - variational Bayes, fullrank
+	#	'svbum'   : Stan (uncollapsed) - variational Bayes, meanfield
+	#	'svbuf'   : Stan (uncollapsed) - variational Bayes, fullrank
 }
 
 # need a try/catch here
@@ -69,7 +73,7 @@ writeLines(c("\nUsing parameter values",
              paste("\titer:",iter)
           ))
 
-model_save_dir = "fitted_models"
+model_save_dir = "fitted_models_temp"
 
 # simulation --------------------------------------------------------------
 
@@ -108,7 +112,7 @@ if(model == 'clm') {
 
 if(model == 'sc') {
   per_chain_it <- as.integer(iter/2)
-  fit.sc <- fit_mstan(sim_data, parameterization="collapsed", ret_stanfit=FALSE, iter=per_chain_it)
+  fit.sc <- fit_mstan(sim_data, ret_stanfit=FALSE, iter=per_chain_it)
   save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
@@ -116,6 +120,26 @@ if(model == 'su') {
   per_chain_it <- as.integer(iter/2)
   fit.su <- fit_mstan(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=per_chain_it)
   save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+}
+
+if(model == 'svbcm') {
+  fit.svbcm <- fit_mstan_vb(sim_data, ret_stanfit=FALSE, iter=iter)
+  save(fit.svbcm, file=paste(model_save_dir,"/SVBCM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+}
+
+if(model == 'svbcf') {
+  fit.svbcf <- fit_mstan_vb(sim_data, algorithm="fullrank", ret_stanfit=FALSE, iter=iter)
+  save(fit.svbcf, file=paste(model_save_dir,"/SVBCF_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+}
+
+if(model == 'svbum') {
+  fit.svbum <- fit_mstan_vb(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=iter)
+  save(fit.svbum, file=paste(model_save_dir,"/SVBUM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+}
+
+if(model == 'svbuf') {
+  fit.svbuf <- fit_mstan_vb(sim_data, parameterization="uncollapsed", algorithm="meanfield", ret_stanfit=FALSE, iter=iter)
+  save(fit.svbuf, file=paste(model_save_dir,"/SVBUF_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
 }
 
 if(model == 'me') {

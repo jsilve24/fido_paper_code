@@ -48,6 +48,7 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   modcode <- switch(parameterization, 
                     "collapsed" = "src/rel_lm_collapsed.stan", 
                     "uncollapsed" = "src/rel_lm_uncollapsed.stan")
+
   if (ret_all){
     fit <- stan(modcode, data=mdataset, chains=chains, 
                 init=init, iter=iter,  ...)
@@ -71,22 +72,12 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   rm(fit) # free up memory
 
   # get Lambda MSE
-  ref <- c(mdataset$Lambda_true)
   est_Lambda <- aperm(pars$B, c(2,3,1))
-  flattened_est_Lambda <- est_Lambda
+  lambda_MSE <- get_Lambda_MSE(mdataset$Lambda_true, est_Lambda)
 
-  n_samples <- (chains*iter)/2
-  dim(flattened_est_Lambda) <- c(nrow(est_Lambda)*ncol(est_Lambda),n_samples)
-  lambda_MSE <- mean(apply(flattened_est_Lambda, 2, sample_SE, y=ref))
+  outside_percent <- get_95CI(mdataset$Lambda_true, est_Lambda)
 
-  # get count of Lambdas outside 95% CI
-  intervals <- apply(est_Lambda, c(1,2), function(x) quantile(x, probs=c(0.025, 0.975)))
-  lower <- c(intervals[1,,])
-  upper <- c(intervals[2,,])
-
-  outside_95CI <- sum(apply(rbind(lower, upper, ref), 2, lambda_outside_bounds))/((mdataset$D-1)*mdataset$Q)
-
-  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_MSE, outside_95CI)
+  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_MSE, outside_percent)
 
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=est_Lambda, 
@@ -97,6 +88,69 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   return(m)
 }
 
+
+#' Fit multinomial model using stan variational inference
+#' 
+#' WARNING: Req that your current working directory is main folder
+#'  "mongrel_paper_code"
+#'  
+#' WARNING: Currently uses a random seed... 
+#' 
+#' @param mdataset an mdataset object
+#' @param chains number of chains to run
+#' @param iter number of samples from each chain (note: includes warmup)
+#' @param parameterization which parameterization to use 
+#'   ("collapsed":default, "uncollapsed")
+#' @param ret_stanfit should stanfit object be returned directly instead of 
+#'   mfit object?
+#' @param ret_all (if TRUE returns all parameters from stan call)
+#' @param algorithm ("meanfield" : default) or "fullrank"
+#' @param ... other parameters passed to function stan
+#' @return mfit object (but returns stanfit if ret_stanfit==TRUE)
+fit_mstan_vb <- function(mdataset, iter=2000, 
+                         parameterization="collapsed", ret_stanfit=FALSE, ret_all=FALSE,
+                         algorithm="meanfield",
+                         ...){
+  
+  init<- list(eta=mongrel::random_mongrel_init(mdataset$Y))
+  
+  modcode <- switch(parameterization, 
+                    "collapsed" = "src/rel_lm_collapsed.stan", 
+                    "uncollapsed" = "src/rel_lm_uncollapsed.stan")
+  m <- stan_model(modcode)
+
+  start_time <- Sys.time()
+  if (ret_all){
+    fit <- vb(m, data=mdataset, 
+              init=init, output_samples=iter, algorithm=algorithm, ...)
+  } else {
+    fit <- vb(m, data=mdataset, 
+              init=init, output_samples=iter, pars=c("B", "Sigma", "eta"), algorithm=algorithm, ...)  
+  }
+  end_time <- Sys.time()
+
+  if (ret_stanfit) return(fit)
+
+  pars <- rstan::extract(fit, c("B", "Sigma", "eta"))
+  est_Lambda <- aperm(pars$B, c(2,3,1))
+  rm(fit) # free up memory
+
+  total_runtime <- end_time - start_time
+
+  lambda_MSE <- get_Lambda_MSE(mdataset$Lambda_true, est_Lambda)
+
+  outside_percent <- get_95CI(mdataset$Lambda_true, est_Lambda)
+
+  metadata <- metadata(0, total_runtime, dim(pars$B)[1], lambda_MSE, outside_percent)
+  
+  m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
+            Lambda=est_Lambda, 
+            Sigma=aperm(pars$Sigma, c(2,3,1)), 
+            mdataset=mdataset,
+            metadata=metadata)
+  m$Eta <- aperm(pars$eta, c(2, 3, 1))
+  return(m)
+}
 
 
 #' Fit multinomial model using stan MAP optimization and Laplace Approximation

@@ -1,3 +1,5 @@
+source("src/dataset_methods.R")
+
 convert_to_seconds <- function(difftime_obj) {
   units <- attr(difftime_obj, "units")
   if (units == "secs") {
@@ -16,19 +18,62 @@ convert_to_seconds <- function(difftime_obj) {
 }
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 2) {
-        stop(paste("Usage: Rscript summarize_runs.R {which coord} {iterations} {output file}"))
-        # Rscript summarize_runs.R 2000 all_output.log
+if (length(args) < 1) {
+        stop(paste("Usage: Rscript summarize_runs.R {output file}"))
+        # Rscript summarize_runs.R all_output.log
 }
 
 # need a try/catch here
-iter <- as.integer(args[1])
-log_file <- args[2]
+log_file <- args[1]
 
 # WARNING: NEED TO FIX IN fit_Stan(), CURRENTLY STORING sample_runtime IN MFIT'S total_runtime
 # correctly referencing it as sample_runtime here but need to fix this for clarity/consistency
 cat(paste("model,ESS,burnin_runtime,sample_runtime,Timer_HessianCalculation,Timer_LaplaceApproximation,Timer_Optimization,Timer_Overall,Timer_Uncollapse_Overall.Overall,",
-    "sweep_param,sweep_value,total_iter,burnin_iter,percent_zero,lambda_MSE,percent_outside_95CI,random_seed\n",sep=""), file=log_file)
+    "sweep_param,sweep_value,total_iter,burnin_iter,percent_zero,lambda_RMSE,percent_outside_95CI,random_seed\n",sep=""), file=log_file)
+
+write_Stan_out <- function(fit, model_name) {
+  lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit$Lambda)
+  outside_CI <- get_95CI(Lambda_true, fit$Lambda)
+  cat(paste(model_name,",",
+    fit$metadata$mean_ess,",",
+    fit$metadata$warmup_runtime,",",
+    fit$metadata$total_runtime,",0,0,0,0,0,",
+    coord,",",
+    sweep_param_value,",",
+    dim(fit$Lambda)[3],",",
+    dim(fit$Lambda)[3]/2,",",
+    percent_zero,",",
+    lambda_RMSE,",",
+    outside_CI,",",
+    r,
+    "\n",sep=""),file=log_file, append=TRUE)
+}
+
+write_Mongrel_out <- function(fit, model_name) {
+  warmup_runtime <- 0
+  total_runtime <- convert_to_seconds(fit$metadata$total_runtime)
+  lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit$Lambda)
+  outside_CI <- get_95CI(Lambda_true, fit$Lambda)
+  cat(paste(model_name,",",
+    dim(fit$Lambda)[3],",",
+    warmup_runtime,",",
+    total_runtime,",",
+    fit$Timer['HessianCalculation'][[1]],",",
+    fit$Timer['LaplaceApproximation'][[1]],",",
+    fit$Timer['Optimization'][[1]],",",
+    fit$Timer['Overall'][[1]],",",
+    fit$Timer['Uncollapse_Overall.Overall'][[1]],",",
+    coord,",",
+    sweep_param_value,",",
+    dim(fit$Lambda)[3],",",
+    0,",",
+    percent_zero,",",
+    lambda_RMSE,",",
+    outside_CI,",",
+    r,
+    "\n",sep=""),
+    file=log_file, append=TRUE)
+}
 
 N_list <- NULL
 D_list <- NULL
@@ -51,9 +96,8 @@ for(coord in coords) {
     Q_list <- c(2, 4, 10, 20, 50, 75, 100, 250, 500);
   }
 
-  model_list <- c("SU", "SC", "ME", "MC", "CLM")
+  model_list <- c("SU", "SC", "ME", "MC", "CLM", "SVBCM", "SVBCF", "SVBUM", "SVBUF")
 
-  per_chain_it <- as.integer(iter/2)
   percent_zero <- -1
 
   for (m in model_list) {
@@ -78,100 +122,50 @@ for(coord in coords) {
               print(paste("Error: data file",destfile,"doesn't exist!"))
               percent_zero <- -1
             }
+            Lambda_true <- sim_data$Lambda_true
             destfile <- paste("fitted_models/",m,"_N",n,"_D",d,"_Q",q,"_R",r,".RData", sep="")
             if (file.exists(destfile)){
               load(destfile)
               if (m == "SU") {
-                cat(paste("stan_uncollapsed,",
-                  fit.su$metadata$mean_ess,",",
-                  fit.su$metadata$warmup_runtime,",",
-                  fit.su$metadata$total_runtime,",0,0,0,0,0,",
-                  coord,",",
-                  sweep_param_value,",",
-                  (4*per_chain_it),",",
-                  (2*per_chain_it),",",
-                  percent_zero,",",
-                  fit.su$metadata$lambda_MSE,",",
-                  fit.su$metadata$outside_95CI,",",
-                  r,
-                  "\n",sep=""),file=log_file,
-                  append=TRUE)
+                write_Stan_out(fit.su, "stan_collapsed")
                 rm(fit.su)
               } else if (m == "SC") {
-                cat(paste("stan_collapsed,",
-                  fit.sc$metadata$mean_ess,",",
-                  fit.sc$metadata$warmup_runtime,",",
-                  fit.sc$metadata$total_runtime,",0,0,0,0,0,",
-                  coord,",",
-                  sweep_param_value,",",
-                  (4*per_chain_it),",",
-                  (2*per_chain_it),",",
-                  percent_zero,",",
-                  fit.sc$metadata$lambda_MSE,",",
-                  fit.sc$metadata$outside_95CI,",",
-                  r,
-                  "\n",sep=""),file=log_file, append=TRUE)
+                write_Stan_out(fit.sc, "stan_uncollapsed")
                 rm(fit.sc)
+              } else if (m == "SVBCM") {
+                write_Stan_out(fit.svbcm, "stan_collapsed_variationalbayes_meanfield")
+                rm(fit.svbcm)
+              } else if (m == "SVBCF") {
+                write_Stan_out(fit.svbcf, "stan_collapsed_variationalbayes_fullrank")
+                rm(fit.svbcf)
+              } else if (m == "SVBUM") {
+                write_Stan_out(fit.svbum, "stan_uncollapsed_variationalbayes_meanfield")
+                rm(fit.svbum)
+              } else if (m == "SVBUF") {
+                write_Stan_out(fit.svbuf, "stan_uncollapsed_variationalbayes_fullrank")
+                rm(fit.svbuf)
               } else if (m == "ME") {
-                warmup_runtime <- fit.me$metadata$warmup_runtime
-                total_runtime <- convert_to_seconds(fit.me$metadata$total_runtime)
-                cat(paste("mongrel_eigen,",
-                  fit.me$metadata$mean_ess,",",
-                  warmup_runtime,",",
-                  total_runtime,",",
-                  fit.me$Timer['HessianCalculation'][[1]],",",
-                  fit.me$Timer['LaplaceApproximation'][[1]],",",
-                  fit.me$Timer['Optimization'][[1]],",",
-                  fit.me$Timer['Overall'][[1]],",",
-                  fit.me$Timer['Uncollapse_Overall.Overall'][[1]],",",
-                  coord,",",
-                  sweep_param_value,",",
-                  iter*2L,",",
-                  0,",",
-                  percent_zero,",",
-                  fit.me$metadata$lambda_MSE,",",
-                  fit.me$metadata$outside_95CI,",",
-                  r,
-                  "\n",sep=""),
-                  file=log_file, append=TRUE)
+                write_Mongrel_out(fit.me, "mongrel_eigen")
                 rm(fit.me)
               } else if (m == "MC") {
-                warmup_runtime <- fit.mc$metadata$warmup_runtime
-                total_runtime <- convert_to_seconds(fit.mc$metadata$total_runtime)
-                cat(paste("mongrel_cholesky,",
-                  fit.mc$metadata$mean_ess,",",
-                  warmup_runtime,",",
-                  total_runtime,",",
-                  fit.mc$Timer['HessianCalculation'][[1]],",",
-                  fit.mc$Timer['LaplaceApproximation'][[1]],",",
-                  fit.mc$Timer['Optimization'][[1]],",",
-                  fit.mc$Timer['Overall'][[1]],",",
-                  fit.mc$Timer['Uncollapse_Overall.Overall'][[1]],",",
-                  coord,",",
-                  sweep_param_value,",",
-                  iter*2L,",",
-                  0,",",
-                  percent_zero,",",
-                  fit.mc$metadata$lambda_MSE,",",
-                  fit.mc$metadata$outside_95CI,",",
-                  r,
-                  "\n",sep=""),
-                  file=log_file, append=TRUE)
+                write_Mongrel_out(fit.mc, "mongrel_cholesky")
                 rm(fit.mc)
               } else if (m == "CLM") {
-                warmup_runtime <- fit.clm$metadata$warmup_runtime
+                warmup_runtime <- 0
                 total_runtime <- convert_to_seconds(fit.clm$metadata$total_runtime)
+                lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit.clm$Lambda)
+                outside_CI <- get_95CI(Lambda_true, fit.clm$Lambda)
                 cat(paste("conjugate_linear_model,",
                   fit.clm$metadata$mean_ess,",",
                   warmup_runtime,",",
                   total_runtime,",0,0,0,0,0,",
                   coord,",",
                   sweep_param_value,",",
-                  iter,",",
+                  dim(fit.clm$Lambda)[3],",",
                   0,",",
                   percent_zero,",",
-                  fit.clm$metadata$lambda_MSE,",",
-                  fit.clm$metadata$outside_95CI,",",
+                  lambda_RMSE,",",
+                  outside_CI,",",
                   r,"\n",sep=""),
                   file=log_file, append=TRUE)
                 rm(fit.clm)

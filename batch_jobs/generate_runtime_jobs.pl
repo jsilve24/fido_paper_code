@@ -21,7 +21,7 @@ if($vary eq 'test') {
 	@Q_vals = qw(500);
 } elsif($vary eq 'N') {
 	# varying N
-	@N_vals = qw(3 5 10 20 30 50 100 250 500 750 1000);
+	@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
@@ -33,21 +33,13 @@ if($vary eq 'test') {
 	# varying Q
 	@N_vals = qw(100);
 	@D_vals = qw(30);
-#	@Q_vals = qw(2 4 10 20 50 75 100 250 500);
-	@Q_vals = qw(75 100);
+	@Q_vals = qw(2 4 10 20 50 75 100 250 500);
 }
 
-#my @methods = qw(me mc sc su clm);
-my @methods = qw(mc me);
-# 1 : Mongrel (eigendecomposition)
-# 2 : Mongrel (Cholesky)
-# 3 : Mongrel (Cholesky, partial)
-# 4 : Stan (collapsed)
-# 5 : Stan (uncollapsed)
-# 6 : naive (conjugate linear model)
+#my @methods = qw(me mc sc su clm svb);
+my @methods = qw(mc me svbcm svbcf svbum svbuf);
 
-#my @rseed = qw(1 2 3);
-my @rseed = qw(2);
+my @rseed = qw(1 2 3);
 
 print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1)*($#rseed+1))." slurm scripts...\n");
 
@@ -90,10 +82,10 @@ for my $N (@N_vals) {
 					close $fh;
 
 					if($vary ne 'test') {
-						if($m_idx eq 'sc' || $m_idx eq 'su') {
-							$sys_response = `sbatch --ntasks=1 --cpus-per-task=4 $filename`;
-						} else {
+						if($m_idx eq 'mc' || $m_idx eq 'me' || $m_idx eq 'clm') {
 							$sys_response = `sbatch --ntasks=1 --cpus-per-task=1 $filename`;
+						} else {
+							$sys_response = `sbatch --ntasks=1 --cpus-per-task=4 $filename`;
 						}
 						sleep(1);
 						chomp($sys_response);

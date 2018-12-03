@@ -1,13 +1,31 @@
 library(ggplot2)
 source("src/dataset_methods.R")
 
-Stan_iter <- 2000
-use_log <- FALSE
-
 # use Stan collapsed as baseline and leave replicates unaveraged
 
-log_file <- "second_moment_data.log"
-cat("model,sweep_param,sweep_value,sd_MSE\n", file=log_file)
+args = commandArgs(trailingOnly=TRUE)
+if (length(args) < 1) {
+        stop(paste("Usage: Rscript summarize_2nd_moment.R {output file}"))
+        # Rscript summarize_2nd_moment.R second_moment_data.log
+}
+
+# need a try/catch here
+log_file <- args[1]
+
+calc_msdod <- function(est_Lambda, ref_Lambda) {
+  rmse <- 0
+  L.sd <- apply(est_Lambda, c(1,2), sd)
+  L.sd <- c(L.sd)
+  for (i in 1:length(ref_Lambda)) {
+    rmse <- rmse + (L.sd[i] - ref_Lambda[i])**2
+  }
+  rmse <- sqrt(rmse / length(ref_Lambda))
+  return(rmse)
+}
+
+cat("model,sweep_param,sweep_value,sd_RMSE\n", file=log_file)
+
+stan_iter <- -1
 
 varying <- c("N", "D", "Q")
 for(vary in varying) {
@@ -50,43 +68,58 @@ for(vary in varying) {
           # STAN (UNCOLLAPSED)
           tryCatch({
             load(paste("fitted_models/SU_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
-            mse.su <- 0
-            L.sd.su <- apply(fit.su$Lambda, c(1,2), sd)
-            L.sd.su <- c(L.sd.su)
-            for (i in 1:length(L.sd.full[[R]])) {
-              mse.su <- mse.su + (L.sd.su[i] - L.sd.full[[R]][i])**2
-            }
-            mse.su <- mse.su / length(L.sd.full[[R]])
-            cat(paste(paste("stan_uncollapsed",vary,parameter_value,mse.su,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            if(stan_iter < 0) { stan_iter <- dim(fit.su$Lambda)[3] }
+            rmse <- calc_msdod(fit.su$Lambda, L.sd.full[[R]])
+            cat(paste(paste("stan_uncollapsed",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          }, error = function(e) { })
+
+          # STAN (COLLAPSED) VARIATIONAL BAYES MEAN FIELD
+          tryCatch({
+            load(paste("fitted_models/SVBCM_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
+            rmse <- calc_msdod(fit.svbcm$Lambda, L.sd.full[[R]])
+            cat(paste(paste("stan_collapsed_variationalbayes_meanfield",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          }, error = function(e) { })
+
+          # STAN (COLLAPSED) VARIATIONAL BAYES FULL RANK
+          tryCatch({
+            load(paste("fitted_models/SVBCF_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
+            rmse <- calc_msdod(fit.svbcf$Lambda, L.sd.full[[R]])
+            cat(paste(paste("stan_collapsed_variationalbayes_fullrank",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          }, error = function(e) { })
+
+          # STAN (UNCOLLAPSED) VARIATIONAL BAYES MEAN FIELD
+          tryCatch({
+            load(paste("fitted_models/SVBUM_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
+            rmse <- calc_msdod(fit.svbum$Lambda, L.sd.full[[R]])
+            cat(paste(paste("stan_uncollapsed_variationalbayes_meanfield",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+          }, error = function(e) { })
+
+          # STAN (UNCOLLAPSED) VARIATIONAL BAYES FULL RANK
+          tryCatch({
+            load(paste("fitted_models/SVBUF_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
+            rmse <- calc_msdod(fit.svbuf$Lambda, L.sd.full[[R]])
+            cat(paste(paste("stan_uncollapsed_variationalbayes_fullrank",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }, error = function(e) { })
 
           # MONGREL CHOLESKY
           tryCatch({
             load(paste("fitted_models/MC_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
-            mse.mc <- 0
-            L.sd.mc <- apply(fit.mc$Lambda[,,1:Stan_iter], c(1,2), sd)
-            L.sd.mc <- c(L.sd.mc)
-            for (i in 1:length(L.sd.full[[R]])) {
-              mse.mc <- mse.mc + (L.sd.mc[i] - L.sd.full[[R]][i])**2
-            }
-            mse.mc <- mse.mc / length(L.sd.full[[R]])
-            cat(paste(paste("mongrel_cholesky",vary,parameter_value,mse.mc,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            rmse <- calc_msdod(fit.mc$Lambda[,,1:stan_iter], L.sd.full[[R]])
+            cat(paste(paste("mongrel_cholesky",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }, error = function(e) { })
 
           # CONJUGATE LINEAR MODEL
           tryCatch({
             load(paste("fitted_models/CLM_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
-            mse.clm <- 0
-            L.sd.clm <- apply(fit.clm$Lambda, c(1,2), sd)
-            L.sd.clm <- c(L.sd.clm)
-            for (i in 1:length(L.sd.full[[R]])) {
-              mse.clm <- mse.clm + (L.sd.clm[i] - L.sd.full[[R]][i])**2
-            }
-            mse.clm <- mse.clm / length(L.sd.full[[R]])
-            cat(paste(paste("conjugate_linear_model",vary,parameter_value,mse.clm,sep=","),"\n",sep=""), file=log_file, append=TRUE)
+            rmse <- calc_msdod(fit.clm$Lambda, L.sd.full[[R]])
+            cat(paste(paste("conjugate_linear_model",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
           }, error = function(e) { })
         }
       }
     }
   }
 }
+
+
+
+
