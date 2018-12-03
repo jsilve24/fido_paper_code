@@ -28,7 +28,8 @@ apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE, share_y
 
   # spacing
   p <- p + theme(panel.spacing = unit(0.5, "lines")) +
-    theme(plot.margin=unit(c(0,0,0,0),"pt"))
+    theme(plot.margin=unit(c(0,0,0,0),"pt")) +
+    theme(aspect.ratio = 1)
 
   # apply theme and border
   p <- p + theme_minimal() +
@@ -39,8 +40,7 @@ apply_common_settings <- function(base_p, horiz=FALSE, use_legend=FALSE, share_y
   }
 
   # remove legend and labels
-  p <- p + xlab("") +
-    ylab("")
+  p <- p + xlab("")
   if(!use_legend) {
     p <- p + theme(strip.text.x = element_blank()) +
         theme(strip.text.y = element_blank())
@@ -67,7 +67,8 @@ render_F1_C1 <- function(dat, use_legend=FALSE) {
     geom_point() +
     geom_smooth(method="loess", se=FALSE, color="black") +
     scale_x_log10() +
-    ylim(0, 1)
+    ylim(0, 1) +
+    ylab("percent zeros")
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -87,7 +88,8 @@ render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x),
       labels = scales::trans_format("log10", scales::math_format(10^.x))
-    )
+    ) +
+    ylab("second per effective sample size")
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -101,7 +103,8 @@ render_F1_C3 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
     ggplot(aes(x=sweep_value, y=lambda_MSE, color=model)) +
     geom_point() +
     geom_smooth(method="loess", se=FALSE) +
-    scale_x_log10()
+    scale_x_log10() +
+    ylab(expression(paste("MSE ",Lambda,sep="")[ij]))
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -118,7 +121,8 @@ render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
   p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
     geom_point() +
     geom_smooth(method="loess", se=FALSE) +
-    scale_x_log10()
+    scale_x_log10() +
+    ylab("MSE of deviation")
 
   p <- apply_common_settings(p, use_legend=use_legend, share_y=TRUE)
   return(p)
@@ -130,12 +134,12 @@ render_F1 <- function(use_legend=FALSE) {
   c1 <- render_F1_C1(dat, use_legend=FALSE)
 
   # render without CLM
-  c2 <- render_F1_C2(dat, use_legend=use_legend)
-  c3 <- render_F1_C3(dat, use_legend=use_legend)
+  c2 <- render_F1_C2(dat, use_legend=FALSE)
+  c3 <- render_F1_C3(dat, use_legend=FALSE)
   c4 <- render_F1_C4(use_legend=use_legend)
   if(use_legend) {
-    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1.5, 1.5, 1.5))
-    ggsave("figure_drafts/legends/F1.png", plot=p, width=17, height=8, units="in")  
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1.6))
+    ggsave("figure_drafts/legends/F1.png", plot=p, width=14, height=8, units="in")  
   } else {
     p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1))
     ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")  
