@@ -36,7 +36,6 @@ write_Stan_out <- function(fit, model_name, vb=FALSE) {
   warmup_runtime <- fit$metadata$warmup_runtime
   total_runtime <- fit$metadata$total_runtime
   if(vb) {
-    warmup_runtime <- convert_to_seconds(warmup_runtime)
     total_runtime <- convert_to_seconds(total_runtime)
   }
   lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit$Lambda)
