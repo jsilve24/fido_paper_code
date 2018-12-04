@@ -177,6 +177,7 @@ plot_posterior_intervals <- function(mfits, ll, ul, use_legend=FALSE, image_file
   mfits$stan_collapsed$Lambda <- mfits$stan_collapsed$Lambda[ll:ul,ll:ul,]
   mfits$stan_uncollapsed$Lambda <- mfits$stan_uncollapsed$Lambda[ll:ul,ll:ul,]
   mfits$conjugate_linear_model$Lambda <- mfits$conjugate_linear_model$Lambda[ll:ul,ll:ul,]
+  mfits$stan_collapsed_variationalbayes_meanfield$Lambda <- mfits$stan_collapsed_variationalbayes_meanfield$Lambda[ll:ul,ll:ul,]
 
   lt <- gather_array(Lambda_true, value, coord, covariate)
   p <- mfits %>% 
@@ -215,26 +216,31 @@ plot_posterior_intervals <- function(mfits, ll, ul, use_legend=FALSE, image_file
 }
 
 render_S2 <- function(use_legend=FALSE) {
-  cat("Rendering Supplemental Figure 2\n")
-  load("fitted_models/MC_N100_D30_Q250_R1.RData")
-  load("fitted_models/SC_N100_D30_Q250_R1.RData")
-  load("fitted_models/SU_N100_D30_Q250_R1.RData")
-  load("fitted_models/CLM_N100_D30_Q250_R1.RData")
-  mfits <- list("mongrel_cholesky"=fit.mc,
-               "stan_collapsed"=fit.sc,
-               "stan_uncollapsed"=fit.su,
-               "conjugate_linear_model"=fit.clm)
-  plot_posterior_intervals(mfits, 1, 5, use_legend=use_legend, image_filename="S2_fail_case.png")
-
+  cat("Rendering Supplemental Figure 2a\n")
   load("fitted_models/MC_N30_D30_Q5_R1.RData")
   load("fitted_models/SC_N30_D30_Q5_R1.RData")
   load("fitted_models/SU_N30_D30_Q5_R1.RData")
   load("fitted_models/CLM_N30_D30_Q5_R1.RData")
+  load("fitted_models/SVBCM_N30_D30_Q5_R1.RData")
   mfits <- list("mongrel_cholesky"=fit.mc,
                 "stan_collapsed"=fit.sc,
                 "stan_uncollapsed"=fit.su,
-                "conjugate_linear_model"=fit.clm)
+                "conjugate_linear_model"=fit.clm,
+                "stan_collapsed_variationalbayes_meanfield"=fit.svbcm)
   plot_posterior_intervals(mfits, 1, 5, use_legend=use_legend, image_filename="S2_good_case.png")
+
+  cat("Rendering Supplemental Figure 2b\n")
+  load("fitted_models/MC_N100_D30_Q250_R1.RData")
+  load("fitted_models/SC_N100_D30_Q250_R1.RData")
+  load("fitted_models/SU_N100_D30_Q250_R1.RData")
+  load("fitted_models/CLM_N100_D30_Q250_R1.RData")
+  load("fitted_models/SVBCM_N100_D30_Q250_R1.RData")
+  mfits <- list("mongrel_cholesky"=fit.mc,
+               "stan_collapsed"=fit.sc,
+               "stan_uncollapsed"=fit.su,
+               "conjugate_linear_model"=fit.clm,
+               "stan_collapsed_variationalbayes_meanfield"=fit.svbcm)
+  plot_posterior_intervals(mfits, 1, 5, use_legend=use_legend, image_filename="S2_fail_case.png")
 }
 
 extract_opt_cols <- function(df, old_colname, new_colname) {
@@ -282,13 +288,13 @@ render_S3 <- function(use_legend=FALSE) {
   }
 }
 
-use_l <- FALSE
+use_l <- TRUE
 render_F1(use_legend=use_l)
 render_S1(use_legend=use_l)
 render_S2(use_legend=use_l)
 render_S3(use_legend=use_l)
 
-use_l <- TRUE
+use_l <- FALSE
 render_F1(use_legend=use_l)
 render_S1(use_legend=use_l)
 render_S2(use_legend=use_l)
