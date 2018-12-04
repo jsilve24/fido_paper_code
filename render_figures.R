@@ -9,8 +9,15 @@ library(ggpubr)
 library(RColorBrewer)
 
 build_color_palette <- function() {
-  my_colors <- brewer.pal(4, "Set1")
-  names(my_colors) <- c("mongrel_cholesky", "stan_collapsed", "stan_uncollapsed", "conjugate_linear_model")
+  my_colors <- brewer.pal(8, "Set1")
+  names(my_colors) <- c("mongrel_cholesky",
+                        "stan_collapsed",
+                        "stan_uncollapsed",
+                        "conjugate_linear_model",
+                        "stan_collapsed_variationalbayes_meanfield",
+                        "stan_collapsed_variationalbayes_fullrank",
+                        "stan_uncollapsed_variationalbayes_meanfield",
+                        "stan_uncollapsed_variationalbayes_fullrank")
   return(scale_colour_manual(name="model", values=my_colors))
 }
 
@@ -74,7 +81,6 @@ render_F1_C1 <- function(dat, use_legend=FALSE) {
 }
 
 render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
-  # dat includes: SU, SC, ME, MC, CLM
   dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
   if(!use_CLM) {
     dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
@@ -83,7 +89,7 @@ render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
     ggplot(aes(x=sweep_value, y=SpES, color=model)) +
     geom_point() + 
-    geom_smooth(method="loess", se=FALSE) +
+#    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x),
@@ -100,9 +106,9 @@ render_F1_C3 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
     dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
   }
   p <- dat_filtered %>% 
-    ggplot(aes(x=sweep_value, y=lambda_MSE, color=model)) +
+    ggplot(aes(x=sweep_value, y=lambda_RMSE, color=model)) +
     geom_point() +
-    geom_smooth(method="loess", se=FALSE) +
+#    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
     ylab(expression(paste("MSE ",Lambda,sep="")[ij]))
   p <- apply_common_settings(p, use_legend=use_legend)
@@ -118,9 +124,9 @@ render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
     dat <- filter(dat, sweep_param=="Q")
   }
   
-  p <- ggplot(dat, aes(x=sweep_value, y=sd_MSE, color=model)) +
+  p <- ggplot(dat, aes(x=sweep_value, y=sd_RMSE, color=model)) +
     geom_point() +
-    geom_smooth(method="loess", se=FALSE) +
+#    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
     ylab("MSE of deviation")
 
@@ -130,7 +136,7 @@ render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
 
 render_F1 <- function(use_legend=FALSE) {
   cat("Rendering Figure 1\n")
-  dat <- read.csv("all_output.log")
+  dat <- read.csv("first_moment_data.log")
   c1 <- render_F1_C1(dat, use_legend=FALSE)
 
   # render without CLM
@@ -138,8 +144,8 @@ render_F1 <- function(use_legend=FALSE) {
   c3 <- render_F1_C3(dat, use_legend=FALSE)
   c4 <- render_F1_C4(use_legend=use_legend)
   if(use_legend) {
-    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1.6))
-    ggsave("figure_drafts/legends/F1.png", plot=p, width=14, height=8, units="in")  
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 2))
+    ggsave("figure_drafts/legends/F1.png", plot=p, width=16, height=8, units="in")  
   } else {
     p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1))
     ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")  
@@ -150,7 +156,7 @@ render_S1 <- function(use_legend=FALSE) {
   cat("Rendering Supplemental Figure 1\n")
   p <- render_F1_C4(use_CLM=TRUE, use_legend=use_legend, Q_only=TRUE)
   if(use_legend) {
-    ggsave("figure_drafts/legends/S1.png", plot=p, width=5, height=3, units="in")
+    ggsave("figure_drafts/legends/S1.png", plot=p, width=6.5, height=3, units="in")
   } else {
     ggsave("figure_drafts/no_legends/S1.png", plot=p, width=4, height=4, units="in")
   }
@@ -243,7 +249,7 @@ extract_opt_cols <- function(df, old_colname, new_colname) {
 # proportion of runtime taken up by optimization 
 render_S3 <- function(use_legend=FALSE) {
   cat("Rendering Supplemental Figure 3\n")
-  dat <- read.csv("all_output.log")
+  dat <- read.csv("first_moment_data.log")
   dat <- filter(dat, model %in% c("mongrel_cholesky"))
   dat <- select(dat, c("sweep_param",
                        "sweep_value",
