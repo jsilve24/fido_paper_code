@@ -10,7 +10,7 @@ my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $vary = 'Q';
+my $vary = 'test';
 
 open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
@@ -77,7 +77,8 @@ for my $N (@N_vals) {
 
 					print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
-					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' 0.002 50000 0.99 1e-10'."\n";
+					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' 2000 adam 0.002 50000 0.99 1e-10'."\n";
+					#print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' 2000 lbfgs'."\n";
 
 					close $fh;
 

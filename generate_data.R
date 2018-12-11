@@ -4,8 +4,9 @@ source("src/utils.R")
 
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
-        stop(paste("Usage: Rscript generate_data.R {N} {D} {Q} {output dir}"))
-        # Rscript generate_data.R 10 10 5 1 simulated_data
+  stop(paste("Usage: Rscript generate_data.R {N} {D} {Q} {output dir}"))
+  # Rscript generate_data.R 10 10 5 1 simulated_data
+  # Rscript generate_data.R 5000 1000 20 1 simulated_data
 }
 
 # need a try/catch here

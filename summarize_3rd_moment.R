@@ -1,4 +1,5 @@
 library(ggplot2)
+library(moments)
 source("src/dataset_methods.R")
 
 # use Stan collapsed as baseline and leave replicates unaveraged
@@ -13,7 +14,7 @@ if (length(args) < 2) {
 vary <- args[1]
 log_file <- args[2]
 
-calc_skewness <- function(Lambda) {
+calc_skewness_manual <- function(Lambda) {
   d.1 <- dim(Lambda)[1]
   d.2 <- dim(Lambda)[2]
   d.3 <- dim(Lambda)[3]
@@ -25,6 +26,11 @@ calc_skewness <- function(Lambda) {
       L.sk[i,j] <- mean(((Lambda[i,j,] - m.1[i,j])/s.1[i,j])**3)
     }
   }
+  return(c(L.sk))
+}
+
+calc_skewness <- function(Lambda) {
+  L.sk <- apply(Lambda, c(1,2), skewness)
   return(c(L.sk))
 }
 
@@ -72,6 +78,7 @@ for (N in N_list) {
         load(paste("fitted_models/SC_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
         # get Stan std dev for each \lambda_{i,j}
         L.sk.full[[R]] <- calc_skewness(fit.sc$Lambda)
+        cat("Baseline:",mean(L.sk.full[[R]]),"\n")
       }
       cat(paste(paste("stan_collapsed",vary,parameter_value,0,sep=","),"\n",sep=""), file=log_file, append=TRUE)
       for (R in 1:3) {
@@ -114,7 +121,10 @@ for (N in N_list) {
         # MONGREL CHOLESKY
         tryCatch({
           load(paste("fitted_models/MC_N",N,"_D",D,"_Q",Q,"_R",R,".RData",sep=""))
-          rmse <- rmse_skewness(calc_skewness(fit.mc$Lambda[,,1:stan_iter]), L.sk.full[[R]])
+          L.sk <- calc_skewness(fit.mc$Lambda[,,1:stan_iter])
+          rmse <- rmse_skewness(L.sk, L.sk.full[[R]])
+          cat("MC (mean):",mean(L.sk),"\n")
+          cat("MC (max):",max(L.sk),"\n")
           cat(paste(paste("mongrel_cholesky",vary,parameter_value,rmse,sep=","),"\n",sep=""), file=log_file, append=TRUE)
         }, error = function(e) { })
 
