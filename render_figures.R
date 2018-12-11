@@ -8,6 +8,11 @@ library(ggstance)
 library(ggpubr)
 library(RColorBrewer)
 
+exclude_models <- c("conjugate_linear_model",
+  "stan_uncollapsed_variationalbayes_meanfield",
+  "stan_uncollapsed_variationalbayes_fullrank",
+  "stan_collapsed_variationalbayes_fullrank")
+
 build_color_palette <- function() {
   my_colors <- brewer.pal(8, "Set1")
   names(my_colors) <- c("mongrel_cholesky",
@@ -80,16 +85,17 @@ render_F1_C1 <- function(dat, use_legend=FALSE) {
   return(p)
 }
 
-render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
+# "all models" includes conjugate linear model, Stan variational inference, etc.
+render_F1_C2 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
   dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
-  if(!use_CLM) {
-    dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
+  if(!use_all_models) {
+    dat_filtered <- filter(dat_filtered, !(model %in% exclude_models))
   }
   p <- dat_filtered %>% 
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
     ggplot(aes(x=sweep_value, y=SpES, color=model)) +
     geom_point() + 
-#    geom_smooth(method="loess", se=FALSE) +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
     scale_y_log10(
       breaks = scales::trans_breaks("log10", function(x) 10^x),
@@ -100,25 +106,25 @@ render_F1_C2 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
   return(p)
 }
 
-render_F1_C3 <- function(dat, use_CLM=FALSE, use_legend=FALSE) {
+render_F1_C3 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
   dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
-  if(!use_CLM) {
-    dat_filtered <- filter(dat_filtered, !(model %in% c("conjugate_linear_model")))
+  if(!use_all_models) {
+    dat_filtered <- filter(dat_filtered, !(model %in% exclude_models))
   }
   p <- dat_filtered %>% 
     ggplot(aes(x=sweep_value, y=lambda_RMSE, color=model)) +
     geom_point() +
-#    geom_smooth(method="loess", se=FALSE) +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
-    ylab(expression(paste("MSE ",Lambda,sep="")[ij]))
+    ylab(expression(paste("RMSE ",Lambda,sep="")[ij]))
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
 
-render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
+render_F1_C4 <- function(use_all_models=FALSE, use_legend=FALSE, Q_only=FALSE) {
   dat <- read.csv("second_moment_data.log")
-  if(!use_CLM) {
-    dat <- filter(dat, !(model %in% c("conjugate_linear_model")))
+  if(!use_all_models) {
+    dat <- filter(dat, !(model %in% exclude_models))
   }
   if(Q_only) {
     dat <- filter(dat, sweep_param=="Q")
@@ -126,9 +132,28 @@ render_F1_C4 <- function(use_CLM=FALSE, use_legend=FALSE, Q_only=FALSE) {
   
   p <- ggplot(dat, aes(x=sweep_value, y=sd_RMSE, color=model)) +
     geom_point() +
-#    geom_smooth(method="loess", se=FALSE) +
+    geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
-    ylab("MSE of deviation")
+    ylab("RMSE of deviation")
+
+  p <- apply_common_settings(p, use_legend=use_legend, share_y=TRUE)
+  return(p)
+}
+
+render_F1_C5 <- function(use_all_models=FALSE, use_legend=FALSE, Q_only=FALSE) {
+  dat <- read.csv("third_moment_data.log")
+  if(!use_all_models) {
+    dat <- filter(dat, !(model %in% exclude_models))
+  }
+  if(Q_only) {
+    dat <- filter(dat, sweep_param=="Q")
+  }
+  
+  p <- ggplot(dat, aes(x=sweep_value, y=skew_RMSE, color=model)) +
+    geom_point() +
+    geom_smooth(method="loess", se=FALSE) +
+    scale_x_log10() +
+    ylab("RMSE of deviation")
 
   p <- apply_common_settings(p, use_legend=use_legend, share_y=TRUE)
   return(p)
@@ -142,19 +167,22 @@ render_F1 <- function(use_legend=FALSE) {
   # render without CLM
   c2 <- render_F1_C2(dat, use_legend=FALSE)
   c3 <- render_F1_C3(dat, use_legend=FALSE)
-  c4 <- render_F1_C4(use_legend=use_legend)
+  c4 <- render_F1_C4(use_legend=FALSE)
+  c5 <- render_F1_C5(use_legend=use_legend)
   if(use_legend) {
-    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 2))
-    ggsave("figure_drafts/legends/F1.png", plot=p, width=16, height=8, units="in")  
+    p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 2))
+    # ggsave("figure_drafts/legends/F1.png", plot=p, width=16, height=8, units="in")
+    ggsave("figure_drafts/legends/F1.png", plot=p, width=19, height=8, units="in")
   } else {
-    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1))
-    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")  
+    p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 1))
+    # ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")
+    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=12.5, height=6, units="in")
   }
 }
 
 render_S1 <- function(use_legend=FALSE) {
   cat("Rendering Supplemental Figure 1\n")
-  p <- render_F1_C4(use_CLM=TRUE, use_legend=use_legend, Q_only=TRUE)
+  p <- render_F1_C4(use_all_models=TRUE, use_legend=use_legend, Q_only=TRUE)
   if(use_legend) {
     ggsave("figure_drafts/legends/S1.png", plot=p, width=6.5, height=3, units="in")
   } else {
@@ -289,14 +317,14 @@ render_S3 <- function(use_legend=FALSE) {
 }
 
 use_l <- TRUE
-render_F1(use_legend=use_l)
+# render_F1(use_legend=use_l)
 render_S1(use_legend=use_l)
 render_S2(use_legend=use_l)
 render_S3(use_legend=use_l)
 
 use_l <- FALSE
-render_F1(use_legend=use_l)
-render_S1(use_legend=use_l)
-render_S2(use_legend=use_l)
-render_S3(use_legend=use_l)
+# render_F1(use_legend=use_l)
+# render_S1(use_legend=use_l)
+# render_S2(use_legend=use_l)
+# render_S3(use_legend=use_l)
 
