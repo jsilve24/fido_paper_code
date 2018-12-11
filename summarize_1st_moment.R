@@ -131,10 +131,10 @@ for (m in model_list) {
           if (file.exists(destfile)){
             load(destfile)
             if (m == "SU") {
-              write_Stan_out(fit.su, "stan_collapsed")
+              write_Stan_out(fit.su, "stan_uncollapsed")
               rm(fit.su)
             } else if (m == "SC") {
-              write_Stan_out(fit.sc, "stan_uncollapsed")
+              write_Stan_out(fit.sc, "stan_collapsed")
               rm(fit.sc)
             } else if (m == "SVBCM") {
               write_Stan_out(fit.svbcm, "stan_collapsed_variationalbayes_meanfield", vb=TRUE)

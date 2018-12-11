@@ -25,7 +25,7 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
   fit <- mongrel(Y=mdataset$Y, X=mdataset$X, upsilon=mdataset$upsilon, 
                  Theta=mdataset$Theta, Gamma=mdataset$Gamma, Xi=mdataset$Xi, 
                  init=random_mongrel_init(mdataset$Y), 
-                 decomp_method=decomposition, n_samples=n_samples,  ...)
+                 decomp_method=decomposition, n_samples=n_samples, ...)
   end_time <- Sys.time()
   if (ret_mongrelfit) return(fit)
 
@@ -37,7 +37,9 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
 
   metadata <- metadata(0, total_runtime, n_samples, lambda_MSE, outside_percent)
 
-  m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=as.integer(n_samples), 
+  cat("Lambda dim: ",dim(fit$Lambda),"\n")
+  iterx <- ifelse(as.integer(n_samples)==0, 1L, as.integer(n_samples))
+  m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=iterx, 
             Lambda=fit$Lambda, 
             Sigma=fit$Sigma,
             mdataset=mdataset,
