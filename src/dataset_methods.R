@@ -127,14 +127,14 @@ new_mdataset <- function(N, D, Q, Y, X, Lambda_true, Sigma_true,
 #' @param warmup_runtime seconds of runtime used in warm-up or burn-in
 #' @param total_runtime seconds of total execution time
 #' @param mean_ess mean effective sample size over the Lambdas
-#' @param lambda_MSE mean squared error of estimated and true Lambdas
+#' @param lambda_RMSE root mean squared error of estimated and true Lambdas
 #' @param outside_95CI proportion of true Lambda values outside 95% posterior CI
 #'
 #' @return object of class metadata
 #' @details 
-metadata <- function(warmup_runtime, total_runtime, mean_ess, lambda_MSE, outside_95CI){
+metadata <- function(warmup_runtime, total_runtime, mean_ess, lambda_RMSE, outside_95CI){
   m <- list(warmup_runtime=warmup_runtime, total_runtime=total_runtime,
-            mean_ess=mean_ess, lambda_MSE=lambda_MSE, outside_95CI=outside_95CI)
+            mean_ess=mean_ess, lambda_RMSE=lambda_RMSE, outside_95CI=outside_95CI)
   class(m) <- c("metadata", "list")
   return(m)
 }
@@ -166,7 +166,7 @@ verify.mdataset <- function(m, ...){
 
 
 # internal
-get_Lambda_MSE <- function(Lambda_true, Lambda_estimated, RMSE=TRUE) {
+get_Lambda_RMSE <- function(Lambda_true, Lambda_estimated, RMSE=TRUE) {
   ref <- c(Lambda_true)
   estimates <- Lambda_estimated
   dim(estimates) <- c(dim(Lambda_estimated)[1]*dim(Lambda_estimated)[2],dim(Lambda_estimated)[3])

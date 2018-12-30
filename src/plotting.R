@@ -100,7 +100,7 @@ plot_eta <- function(mfits, Eta_true=NULL, image_filename=NULL){
 #' 
 #' @details Columns of the data table are expected to be: model, ESS,
 #' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
-#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
+#' percent_zero, lambda_RMSE, percent_outside_95CI, random_seed
 plot_SpES <- function(dat, varying_param, image_filename=NULL, log_y=TRUE){
   p <- dat %>% 
     mutate(SpES=1/(ESS/(sample_runtime+burnin_runtime))) %>% 
@@ -131,9 +131,9 @@ plot_SpES <- function(dat, varying_param, image_filename=NULL, log_y=TRUE){
 #' 
 #' @details Columns of the data table are expected to be: model, ESS,
 #' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
-#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
+#' percent_zero, lambda_RMSE, percent_outside_95CI, random_seed
 plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NULL, fit_line=TRUE){
-  accuracy_measure <- "lambda_MSE"
+  accuracy_measure <- "lambda_RMSE"
   if(use_95CI) {
     accuracy_measure <- "percent_outside_95CI"
   }
@@ -165,7 +165,7 @@ plot_accuracy <- function(dat, varying_param, use_95CI=FALSE, image_filename=NUL
 #' 
 #' @details Columns of the data table are expected to be: model, ESS,
 #' burnin_runtime, sample_runtime, N, D, Q, total_iter, burnin_iter,
-#' percent_zero, lambda_MSE, percent_outside_95CI, random_seed
+#' percent_zero, lambda_RMSE, percent_outside_95CI, random_seed
 plot_sparsity <- function(dat, varying_param, image_filename=NULL){
   p <- dat %>% 
     ggplot(aes_string(x=varying_param, y="percent_zero")) +

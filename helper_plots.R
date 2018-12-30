@@ -35,22 +35,22 @@ plot_SpES(datQ, "Q", image_filename="results_efficiency/SpES/SpES_Q_plot.png", l
 
 # plot seconds per effective sample size
 
-MSE_N <- datN[datN$model != "mongrel_eigen",]
-MSE_D <- datD[datD$model != "mongrel_eigen",]
-MSE_Q <- datQ[datQ$model != "mongrel_eigen",]
+RMSE_N <- datN[datN$model != "mongrel_eigen",]
+RMSE_D <- datD[datD$model != "mongrel_eigen",]
+RMSE_Q <- datQ[datQ$model != "mongrel_eigen",]
 
-print("Plotting MSE...")
-plot_accuracy(MSE_N, "N", image_filename="results_accuracy/lambda_MSE/MSE_N.png", fit_line=FALSE)
-plot_accuracy(MSE_D, "D", image_filename="results_accuracy/lambda_MSE/MSE_D.png", fit_line=FALSE)
-plot_accuracy(MSE_Q, "Q", image_filename="results_accuracy/lambda_MSE/MSE_Q.png", fit_line=FALSE)
+print("Plotting RMSE...")
+plot_accuracy(RMSE_N, "N", image_filename="results_accuracy/lambda_RMSE/RMSE_N.png", fit_line=FALSE)
+plot_accuracy(RMSE_D, "D", image_filename="results_accuracy/lambda_RMSE/RMSE_D.png", fit_line=FALSE)
+plot_accuracy(RMSE_Q, "Q", image_filename="results_accuracy/lambda_RMSE/RMSE_Q.png", fit_line=FALSE)
 
 # plot 95% credible interval
 
 #print("Plotting 95 CI...")
-#plot_accuracy(MSE_N, "N", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_N.png")
-#plot_accuracy(MSE_D, "D", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_D.png")
-#plot_accuracy(MSE_Q, "Q", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_Q.png")
+#plot_accuracy(RMSE_N, "N", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_N.png")
+#plot_accuracy(RMSE_D, "D", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_D.png")
+#plot_accuracy(RMSE_Q, "Q", use_95CI=TRUE, image_filename="results_accuracy/CI_95/95CI_Q.png")
 
-rm(MSE_N); rm(MSE_D); rm(MSE_Q)
+rm(RMSE_N); rm(RMSE_D); rm(RMSE_Q)
 
 

@@ -31,13 +31,12 @@ fit_mongrel <- function(mdataset, n_samples=2000, decomposition="eigen", ret_mon
 
   total_runtime <- end_time - start_time
 
-  lambda_MSE <- get_Lambda_MSE(mdataset$Lambda_true, fit$Lambda)
+  lambda_RMSE <- get_Lambda_RMSE(mdataset$Lambda_true, fit$Lambda)
 
   outside_percent <- get_95CI(mdataset$Lambda_true, fit$Lambda)
 
-  metadata <- metadata(0, total_runtime, n_samples, lambda_MSE, outside_percent)
+  metadata <- metadata(0, total_runtime, n_samples, lambda_RMSE, outside_percent)
 
-  cat("Lambda dim: ",dim(fit$Lambda),"\n")
   iterx <- ifelse(as.integer(n_samples)==0, 1L, as.integer(n_samples))
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=iterx, 
             Lambda=fit$Lambda, 

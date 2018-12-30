@@ -73,11 +73,11 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
 
   # get Lambda MSE
   est_Lambda <- aperm(pars$B, c(2,3,1))
-  lambda_MSE <- get_Lambda_MSE(mdataset$Lambda_true, est_Lambda)
+  lambda_RMSE <- get_Lambda_RMSE(mdataset$Lambda_true, est_Lambda)
 
   outside_percent <- get_95CI(mdataset$Lambda_true, est_Lambda)
 
-  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_MSE, outside_percent)
+  metadata <- metadata(max_chain_warmup, max_chain_sample, mean_n_eff, lambda_RMSE, outside_percent)
 
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=est_Lambda, 
@@ -137,11 +137,11 @@ fit_mstan_vb <- function(mdataset, iter=2000,
 
   total_runtime <- end_time - start_time
 
-  lambda_MSE <- get_Lambda_MSE(mdataset$Lambda_true, est_Lambda)
+  lambda_RMSE <- get_Lambda_RMSE(mdataset$Lambda_true, est_Lambda)
 
   outside_percent <- get_95CI(mdataset$Lambda_true, est_Lambda)
 
-  metadata <- metadata(0, total_runtime, dim(pars$B)[1], lambda_MSE, outside_percent)
+  metadata <- metadata(0, total_runtime, dim(pars$B)[1], lambda_RMSE, outside_percent)
   
   m <- mfit(N=mdataset$N, D=mdataset$D, Q=mdataset$Q, iter=dim(pars$B)[1], 
             Lambda=est_Lambda, 

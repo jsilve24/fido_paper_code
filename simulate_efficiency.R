@@ -20,9 +20,9 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm','svbcm','svbcf','svbum','svbuf'}",
-                   "{opt: iterations} {opt: optim_method} {opt: step_size} {opt: max_iter} {opt: b1} {opt: eps_f}"))
-        # Rscript simulate_efficiency.R 10 10 5 1 mc 2000 adam 0.002 50000 0.99 1e-10
-        # Rscript simulate_efficiency.R 10 10 5 1 mc 2000 lbgfs
+                   "{opt: iterations} {opt: save_dir} {opt: optim_method} {opt: max_iter} {opt: eps_f} {opt: step_size} {opt: b1} {opt: file suffix}"))
+        # Rscript simulate_efficiency.R 20 30 5 1 mc 2000 fitted_models_temp adam 100000 1e-11 0.004 0.99 _MKL_8_MAP
+        # Rscript simulate_efficiency.R 100 150 5 1 mc 2000 fitted_models_temp lbfgs 100000 1e-11
 	# model 'clm'   : conjugate linear model
 	#       'sc'    : Stan (collapsed)
 	#       'su'    : Stan (uncollapsed)
@@ -54,14 +54,24 @@ b1 <- 0.9
 eps_f <- 1e-10
 
 calcPartialHess <- FALSE
+
+model_save_dir <- "fitted_models"
 if (length(args) >= 7) {
-  optim_method <- args[7]
+  model_save_dir <- args[7]
 }
-if (length(args) >= 11) {
-  step_size <- as.numeric(args[8])
+
+if (length(args) >= 8) {
+  optim_method <- args[8]
+}
+if (length(args) >= 12) {
   max_iter <- as.integer(args[9])
-  b1 <- as.numeric(args[10])
-  eps_f <- as.numeric(args[11])
+  eps_f <- as.numeric(args[10])
+  step_size <- as.numeric(args[11])
+  b1 <- as.numeric(args[12])
+}
+file_suffix <- NULL
+if (length(args) >= 13) {
+  file_suffix <- args[13]
 }
 
 # data already generated but for reproducible sampling behavior from Stan, optimizer
@@ -80,11 +90,9 @@ writeLines(c("\nUsing parameter values",
              paste("\tb1:",b1),
              paste("\teps_f:",eps_f),
              paste("\tcalcPartialHess:",calcPartialHess),
-             paste("\titer:",iter)
+             paste("\titer:",iter),
+             paste("\tsaving to:",model_save_dir)
           ))
-
-model_save_dir = "fitted_models_temp"
-#model_save_dir = "fitted_models"
 
 # simulation --------------------------------------------------------------
 
@@ -103,7 +111,7 @@ print(paste("Percent zero counts: ",percent_zero,sep=""))
 
 if(model == 'clm') {
   fit.clm <- fit_CLM(sim_data, n_samples=iter)
-  save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.clm, file=paste(model_save_dir,"/CLM_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 
   if(FALSE) {
     # "sample" with a bunch of uncollapses; this should be the same as above but we'll use it to double-check
@@ -117,57 +125,57 @@ if(model == 'clm') {
       Lambdas[,,i] <- temp$Lambda
     }
     fit.u$Lambda <- Lambdas
-    save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+    save(fit.u, file=paste(model_save_dir,"/CLMU_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
   }
 }
 
 if(model == 'sc') {
   per_chain_it <- as.integer(iter/2)
   fit.sc <- fit_mstan(sim_data, ret_stanfit=FALSE, iter=per_chain_it)
-  save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.sc, file=paste(model_save_dir,"/SC_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'su') {
   per_chain_it <- as.integer(iter/2)
   fit.su <- fit_mstan(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=per_chain_it)
-  save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.su, file=paste(model_save_dir,"/SU_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'svbcm') {
   fit.svbcm <- fit_mstan_vb(sim_data, ret_stanfit=FALSE, iter=iter)
-  save(fit.svbcm, file=paste(model_save_dir,"/SVBCM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.svbcm, file=paste(model_save_dir,"/SVBCM_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'svbcf') {
   fit.svbcf <- fit_mstan_vb(sim_data, algorithm="fullrank", ret_stanfit=FALSE, iter=iter)
-  save(fit.svbcf, file=paste(model_save_dir,"/SVBCF_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.svbcf, file=paste(model_save_dir,"/SVBCF_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'svbum') {
   fit.svbum <- fit_mstan_vb(sim_data, parameterization="uncollapsed", ret_stanfit=FALSE, iter=iter)
-  save(fit.svbum, file=paste(model_save_dir,"/SVBUM_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.svbum, file=paste(model_save_dir,"/SVBUM_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'svbuf') {
   fit.svbuf <- fit_mstan_vb(sim_data, parameterization="uncollapsed", algorithm="meanfield", ret_stanfit=FALSE, iter=iter)
-  save(fit.svbuf, file=paste(model_save_dir,"/SVBUF_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.svbuf, file=paste(model_save_dir,"/SVBUF_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'me') {
   # double Mongrel iterations
   iter <- 2L*iter
   fit.me <- fit_mongrel(sim_data, decomposition="eigen", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
-  save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.me, file=paste(model_save_dir,"/ME_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
 if(model == 'mc') {
   # double Mongrel iterations
   iter <- 2L*iter
-  fit.mc <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f, verbose=FALSE)
-  save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  fit.mc <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
+  save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep="")) 
 }
 
 if(model == 'mcp') {
   fit.mcp <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f, calcPartialHess=TRUE)
-  save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,".RData",sep=""))
+  save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }

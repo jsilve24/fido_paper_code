@@ -38,7 +38,7 @@ write_Stan_out <- function(fit, model_name, vb=FALSE) {
   if(vb) {
     total_runtime <- convert_to_seconds(total_runtime)
   }
-  lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit$Lambda)
+  lambda_RMSE <- get_Lambda_RMSE(Lambda_true, fit$Lambda)
   outside_CI <- get_95CI(Lambda_true, fit$Lambda)
   cat(paste(model_name,",",
     fit$metadata$mean_ess,",",
@@ -58,7 +58,7 @@ write_Stan_out <- function(fit, model_name, vb=FALSE) {
 write_Mongrel_out <- function(fit, model_name) {
   warmup_runtime <- 0
   total_runtime <- convert_to_seconds(fit$metadata$total_runtime)
-  lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit$Lambda)
+  lambda_RMSE <- get_Lambda_RMSE(Lambda_true, fit$Lambda)
   outside_CI <- get_95CI(Lambda_true, fit$Lambda)
   cat(paste(model_name,",",
     dim(fit$Lambda)[3],",",
@@ -157,7 +157,7 @@ for (m in model_list) {
             } else if (m == "CLM") {
               warmup_runtime <- 0
               total_runtime <- convert_to_seconds(fit.clm$metadata$total_runtime)
-              lambda_RMSE <- get_Lambda_MSE(Lambda_true, fit.clm$Lambda)
+              lambda_RMSE <- get_Lambda_RMSE(Lambda_true, fit.clm$Lambda)
               outside_CI <- get_95CI(Lambda_true, fit.clm$Lambda)
               cat(paste("conjugate_linear_model,",
                 fit.clm$metadata$mean_ess,",",
