@@ -10,9 +10,18 @@ my @N_vals;
 my @D_vals;
 my @Q_vals;
 
-my $vary = 'N';
+if($#ARGV < 2) {
+	print("Usage: perl generate_runtime_jobs.pl {vary} {cores} {MAP-only}\n");
+}
 
+my $vary = $ARGV[0];
+my $cores = $ARGV[1];
+my $use_MAP = "F";
+if($ARGV[2] != 0) {
+	$use_MAP = "T";
+}
 my $optim = 'lbfgs';
+my $samples = 2000;
 
 open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
@@ -39,7 +48,7 @@ if($vary eq 'test') {
 }
 
 # available methods: me mc sc su clm svbcm svbcf svbum svbuf
-my @methods = qw(clm);
+my @methods = qw(mc);
 
 my @rseed = qw(1 2 3);
 
@@ -48,27 +57,17 @@ print("Generating ".(($#N_vals+1)*($#D_vals+1)*($#Q_vals+1)*($#methods+1)*($#rse
 my @usable_nodes = qw(x2-01-3 x2-04-4 x2-05-1 x2-06-3 x2-07-2 x2-01-2 x2-01-4 x2-02-1 x2-02-2 x2-02-3 x2-02-4 x2-03-1 x2-03-2 x2-03-3 x2-03-4 x2-04-1 x2-04-2 x2-04-3 x2-05-2 x2-05-3 x2-05-4 x2-06-1 x2-06-2 x2-06-4 x2-07-1x2-07-3 x2-07-4 x2-08-1 x2-08-2 x2-08-3 x2-08-4);
 
 my $use_MKL = 1;
-my $use_cores = 8;
-my $use_MAP = 0;
 
 my $simulation_ret = -1;
 my $sys_response = '';
 my $rand_n = -1;
 my $node_found = 0;
 
-my $samples = 2000;
-if($use_MAP) {
-	$samples = 0;
-}
-
 my $file_suffix = "";
 if($use_MKL) {
 	$file_suffix = $file_suffix."_MKL";
 }
-$file_suffix = $file_suffix."_".$use_cores;
-if($use_MAP) {
-	$file_suffix = $file_suffix."_MAP";
-}
+$file_suffix = $file_suffix."_".$cores;
 
 for my $N (@N_vals) {
 	for my $D (@D_vals) {
@@ -103,7 +102,7 @@ for my $N (@N_vals) {
 					print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
 					# extra arguments will be ignored if not needed
-					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' fitted_models_2018-12-30 '.$optim.' 50000 1e-10 0.004 0.99 '.$file_suffix."\n";
+					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' '.$use_MAP.' '.$optim.' 50000 1e-10 0.004 0.99 fitted_models_2018-12-30 '.$file_suffix."\n";
 
 					close $fh;
 
@@ -116,22 +115,23 @@ for my $N (@N_vals) {
 						print("\t".$sys_response);
 						# e.g.: x2-01-3,16/12/0/28,217480
 						if($sys_response =~ /^.*?,\d+\/(\d+)\/.*,(\d+)$/) {
-						        if($1 >= $use_cores && $2 >= 64000) {
+						        if($1 >= $cores && $2 >= 64000) {
 								$node_found = 1;
 						        }
 						}
 					}
 					if($vary ne 'test') {
-						my $call_str = "sbatch --ntasks=1 --cpus-per-task=$use_cores --nodelist=$usable_nodes[$rand_n] $filename";
+						my $call_str = "sbatch --ntasks=1 --cpus-per-task=$cores --nodelist=$usable_nodes[$rand_n] $filename";
 						print("Calling: ".$call_str."\n");
-#						$sys_response = `$call_str`;
-#						sleep(1);
-#						chomp($sys_response);
-#						print $job_listing substr($sys_response,20,length($sys_response))."\tmodel=".uc($m_idx)."\tN=".$N."\tD=".$D."\tQ=".$Q."\tR=".$rep."\n";
+						$sys_response = `$call_str`;
+						sleep(1);
+						chomp($sys_response);
+						print $job_listing substr($sys_response,20,length($sys_response))."\tmodel=".uc($m_idx)."\tN=".$N."\tD=".$D."\tQ=".$Q."\tR=".$rep."\n";
 					}
 				}
 			}
 		}
 	}
 }
+
 

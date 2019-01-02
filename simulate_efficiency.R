@@ -20,9 +20,8 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm','svbcm','svbcf','svbum','svbuf'}",
-                   "{opt: iterations} {opt: save_dir} {opt: optim_method} {opt: max_iter} {opt: eps_f} {opt: step_size} {opt: b1} {opt: file suffix}"))
-        # Rscript simulate_efficiency.R 20 30 5 1 mc 2000 fitted_models_temp adam 100000 1e-11 0.004 0.99 _MKL_8_MAP
-        # Rscript simulate_efficiency.R 100 150 5 1 mc 2000 fitted_models_temp lbfgs 100000 1e-11
+                   "{opt: iterations} {opt: MAP-only T/F} {opt: optim_method} {opt: max_iter} {opt: eps_f} {opt: step_size} {opt: b1} {opt: save_dir} {opt: file suffix}"))
+        # Rscript simulate_efficiency.R 20 30 5 1 mc 2000 T adam 100000 1e-11 0.004 0.99 fitted_models_temp _MKL_4
 	# model 'clm'   : conjugate linear model
 	#       'sc'    : Stan (collapsed)
 	#       'su'    : Stan (uncollapsed)
@@ -35,43 +34,59 @@ if (length(args) < 5) {
 	#	'svbuf'   : Stan (uncollapsed) - variational Bayes, fullrank
 }
 
-# need a try/catch here
+# required arguments
 N <- as.integer(args[1])
 D <- as.integer(args[2])
 Q <- as.integer(args[3])
 rseed <- as.integer(args[4])
 model <- args[5]
 
-calcGradHess <- FALSE
-iter <- as.integer(args[6])
-if(iter > 0) {
-  calcGradHess <- TRUE
+# optional arguments
+# 6: iterations
+# 7: MAP-only
+# 8: optimization method
+# 9: optimization parameter, max iterations
+# 10: optimization parameter, gradient stopping threshold
+# 11: optimization parameter, step size
+# 12: optimization parameter, momentum
+# 13: save directory
+# 14: save file suffix
+
+iter <- 2000L
+if(length(args) >= 6) {
+  iter <- as.integer(args[6])
 }
+
+calcGradHess <- TRUE
+if(length(args) >= 7) {
+  calcGradHess <- !(as.logical(args[7]))
+}
+
 optim_method <- "adam"
 step_size <- 0.003
 max_iter <- 10000
 b1 <- 0.9
 eps_f <- 1e-10
-
-calcPartialHess <- FALSE
-
-model_save_dir <- "fitted_models"
-if (length(args) >= 7) {
-  model_save_dir <- args[7]
-}
-
-if (length(args) >= 8) {
+if(length(args) >= 12) {
   optim_method <- args[8]
-}
-if (length(args) >= 12) {
   max_iter <- as.integer(args[9])
   eps_f <- as.numeric(args[10])
   step_size <- as.numeric(args[11])
   b1 <- as.numeric(args[12])
 }
+
+model_save_dir <- "fitted_models"
+if(length(args) >= 13) {
+  model_save_dir <- args[13]
+}
+
 file_suffix <- NULL
-if (length(args) >= 13) {
-  file_suffix <- args[13]
+if (length(args) >= 14) {
+  file_suffix <- args[14]
+}
+
+if(!calcGradHess) {
+  file_suffix <- paste(file_suffix, "MAP", sep="_")
 }
 
 # data already generated but for reproducible sampling behavior from Stan, optimizer
@@ -83,14 +98,14 @@ writeLines(c("\nUsing parameter values",
              paste("\tD:",D),
              paste("\tQ:",Q),
              paste("\trseed:",rseed),
+             paste("\titer:",iter),
+             paste("\tcalcGradHess:",calcGradHess),
              paste("\tmodel:",model),
              paste("\toptim_method:",optim_method),
              paste("\tstep_size:",step_size),
              paste("\tmax_iter:",max_iter),
              paste("\tb1:",b1),
              paste("\teps_f:",eps_f),
-             paste("\tcalcPartialHess:",calcPartialHess),
-             paste("\titer:",iter),
              paste("\tsaving to:",model_save_dir)
           ))
 

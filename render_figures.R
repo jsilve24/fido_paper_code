@@ -8,14 +8,18 @@ library(ggstance)
 library(ggpubr)
 library(RColorBrewer)
 
+model_dir <- "fitted_models_2018-12-30"
+MKL_suffix <- "_MKL_4"
+
 exclude_models <- c("conjugate_linear_model",
   "stan_uncollapsed_variationalbayes_meanfield",
   "stan_uncollapsed_variationalbayes_fullrank",
   "stan_collapsed_variationalbayes_fullrank")
 
 build_color_palette <- function() {
-  my_colors <- brewer.pal(8, "Set1")
+  my_colors <- brewer.pal(9, "Set1")
   names(my_colors) <- c("mongrel_cholesky",
+                        "mongrel_cholesky_MAP",
                         "stan_collapsed",
                         "stan_uncollapsed",
                         "conjugate_linear_model",
@@ -245,11 +249,11 @@ plot_posterior_intervals <- function(mfits, ll, ul, use_legend=FALSE, image_file
 
 render_S2 <- function(use_legend=FALSE) {
   cat("Rendering Supplemental Figure 2a\n")
-  load("fitted_models/MC_N30_D30_Q5_R1.RData")
-  load("fitted_models/SC_N30_D30_Q5_R1.RData")
-  load("fitted_models/SU_N30_D30_Q5_R1.RData")
-  load("fitted_models/CLM_N30_D30_Q5_R1.RData")
-  load("fitted_models/SVBCM_N30_D30_Q5_R1.RData")
+  load(paste(model_dir,"/MC_N30_D30_Q5_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SC_N30_D30_Q5_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SU_N30_D30_Q5_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/CLM_N30_D30_Q5_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SVBCM_N30_D30_Q5_R1",MKL_suffix,".RData",sep=""))
   mfits <- list("mongrel_cholesky"=fit.mc,
                 "stan_collapsed"=fit.sc,
                 "stan_uncollapsed"=fit.su,
@@ -258,11 +262,11 @@ render_S2 <- function(use_legend=FALSE) {
   plot_posterior_intervals(mfits, 1, 5, use_legend=use_legend, image_filename="S2_good_case.png")
 
   cat("Rendering Supplemental Figure 2b\n")
-  load("fitted_models/MC_N100_D30_Q250_R1.RData")
-  load("fitted_models/SC_N100_D30_Q250_R1.RData")
-  load("fitted_models/SU_N100_D30_Q250_R1.RData")
-  load("fitted_models/CLM_N100_D30_Q250_R1.RData")
-  load("fitted_models/SVBCM_N100_D30_Q250_R1.RData")
+  load(paste(model_dir,"/MC_N100_D30_Q250_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SC_N100_D30_Q250_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SU_N100_D30_Q250_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/CLM_N100_D30_Q250_R1",MKL_suffix,".RData",sep=""))
+  load(paste(model_dir,"/SVBCM_N100_D30_Q250_R1",MKL_suffix,".RData",sep=""))
   mfits <- list("mongrel_cholesky"=fit.mc,
                "stan_collapsed"=fit.sc,
                "stan_uncollapsed"=fit.su,

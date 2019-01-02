@@ -55,17 +55,23 @@ write_Stan_out <- function(fit, model_name, vb=FALSE) {
     "\n",sep=""),file=log_file, append=TRUE)
 }
 
-write_Mongrel_out <- function(fit, model_name) {
+write_Mongrel_out <- function(fit, model_name, MAP=FALSE) {
   warmup_runtime <- 0
   total_runtime <- convert_to_seconds(fit$metadata$total_runtime)
   lambda_RMSE <- get_Lambda_RMSE(Lambda_true, fit$Lambda)
   outside_CI <- get_95CI(Lambda_true, fit$Lambda)
+  Hessian_time <- 0
+  Laplace_time <- 0
+  if(!MAP) {
+    Hessian_time <- fit$Timer['HessianCalculation'][[1]]
+    Laplace_time <- fit$Timer['LaplaceApproximation'][[1]]
+  }
   cat(paste(model_name,",",
     dim(fit$Lambda)[3],",",
     warmup_runtime,",",
     total_runtime,",",
-    fit$Timer['HessianCalculation'][[1]],",",
-    fit$Timer['LaplaceApproximation'][[1]],",",
+    Hessian_time,",",
+    Laplace_time,",",
     fit$Timer['Optimization'][[1]],",",
     fit$Timer['Overall'][[1]],",",
     fit$Timer['Uncollapse_Overall.Overall'][[1]],",",
@@ -87,7 +93,7 @@ Q_list <- NULL
 R_list <- c(1, 2, 3)
 
 if(vary == "N") {
-  N_list <- c(3, 5, 10, 20, 30, 50, 100, 250, 500, 750, 1000);
+  N_list <- c(1, 3, 5, 10, 20, 30, 50, 100, 250, 500, 750, 1000);
   D_list <- c(30);
   Q_list <- c(5);
 } else if(vary == "D") {
@@ -100,7 +106,11 @@ if(vary == "N") {
   Q_list <- c(2, 4, 10, 20, 50, 75, 100, 250, 500);
 }
 
-model_list <- c("SU", "SC", "ME", "MC", "CLM", "SVBCM", "SVBCF", "SVBUM", "SVBUF")
+#model_list <- c("SU", "SC", "ME", "MC", "CLM", "SVBCM", "SVBCF", "SVBUM", "SVBUF")
+model_list <- c("SU", "SC", "MC", "CLM", "SVBCM", "MC_MAP")
+
+model_dir <- "fitted_models_2018-12-30"
+MKL_suffix <- "_MKL_4"
 
 percent_zero <- -1
 
@@ -127,7 +137,10 @@ for (m in model_list) {
             percent_zero <- -1
           }
           Lambda_true <- sim_data$Lambda_true
-          destfile <- paste("fitted_models/",m,"_N",n,"_D",d,"_Q",q,"_R",r,".RData", sep="")
+          destfile <- paste(model_dir,"/",m,"_N",n,"_D",d,"_Q",q,"_R",r,MKL_suffix,".RData", sep="")
+          if(m == "MC_MAP") {
+            destfile <- paste(model_dir,"/MC_N",n,"_D",d,"_Q",q,"_R",r,MKL_suffix,"_MAP.RData", sep="")
+          }
           if (file.exists(destfile)){
             load(destfile)
             if (m == "SU") {
@@ -153,6 +166,9 @@ for (m in model_list) {
               rm(fit.me)
             } else if (m == "MC") {
               write_Mongrel_out(fit.mc, "mongrel_cholesky")
+              rm(fit.mc)
+            } else if (m == "MC_MAP") {
+              write_Mongrel_out(fit.mc, "mongrel_cholesky_MAP", MAP=TRUE)
               rm(fit.mc)
             } else if (m == "CLM") {
               warmup_runtime <- 0
