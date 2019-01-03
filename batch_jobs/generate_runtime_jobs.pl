@@ -11,7 +11,7 @@ my @D_vals;
 my @Q_vals;
 
 if($#ARGV < 2) {
-	print("Usage: perl generate_runtime_jobs.pl {vary} {cores} {MAP-only}\n");
+	print("Usage: perl generate_runtime_jobs.pl {vary} {cores} {MAP-only = 1/0}\n");
 	exit;
 }
 
@@ -33,8 +33,7 @@ if($vary eq 'test') {
 	@Q_vals = qw(5);
 } elsif($vary eq 'N') {
 	# varying N
-	#@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
-	@N_vals = qw(750);
+	@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
@@ -104,7 +103,7 @@ for my $N (@N_vals) {
 					print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
 					# extra arguments will be ignored if not needed
-					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' '.$optim.' '.$model_dir.' '.$file_suffix.' 50000 1e-10 0.004 0.99'."\n";
+					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' '.$optim.' '.$model_dir.' '.$file_suffix.' 100000 1e-11 0.004 0.99'."\n";
 
 					close $fh;
 
