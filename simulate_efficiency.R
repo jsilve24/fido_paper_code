@@ -20,8 +20,9 @@ devtools::load_all("/data/mukherjeelab/Mongrel/mongrel")
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
         stop(paste("Usage: Rscript simulate_efficiency.R {N} {D} {Q} {random seed} {model='sc','su','me','mc','mcp','clm','svbcm','svbcf','svbum','svbuf'}",
-                   "{opt: iterations} {opt: MAP-only T/F} {opt: optim_method} {opt: max_iter} {opt: eps_f} {opt: step_size} {opt: b1} {opt: save_dir} {opt: file suffix}"))
-        # Rscript simulate_efficiency.R 20 30 5 1 mc 2000 T adam 100000 1e-11 0.004 0.99 fitted_models_temp _MKL_4
+                   "{opt: iterations} {opt: optim_method} {opt: save_dir} {opt: file suffix} {opt: max_iter} {opt: eps_f} {opt: step_size} {opt: b1}"))
+        # e.g. Rscript simulate_efficiency.R 20 30 5 1 mc 2000 adam fitted_models_temp _MKL_4 100000 1e-11 0.004 0.99
+        # e.g. Rscript simulate_efficiency.R 20 30 5 1 mc 0 lbfgs fitted_models_temp _MKL_4 100000 1e-11
 	# model 'clm'   : conjugate linear model
 	#       'sc'    : Stan (collapsed)
 	#       'su'    : Stan (uncollapsed)
@@ -43,50 +44,49 @@ model <- args[5]
 
 # optional arguments
 # 6: iterations
-# 7: MAP-only
-# 8: optimization method
-# 9: optimization parameter, max iterations
-# 10: optimization parameter, gradient stopping threshold
-# 11: optimization parameter, step size
-# 12: optimization parameter, momentum
-# 13: save directory
-# 14: save file suffix
+# 7: optimization method
+# 8: save directory
+# 9: save file suffix
+# 10: optimization parameter, max iterations
+# 11: optimization parameter, gradient stopping threshold
+# 12: optimization parameter, step size (Adam only)
+# 13: optimization parameter, momentum (Adam only
 
 iter <- 2000L
 if(length(args) >= 6) {
   iter <- as.integer(args[6])
 }
 
-calcGradHess <- TRUE
-if(length(args) >= 7) {
-  calcGradHess <- !(as.logical(args[7]))
-}
-
 optim_method <- "adam"
-step_size <- 0.003
-max_iter <- 10000
-b1 <- 0.9
-eps_f <- 1e-10
-if(length(args) >= 12) {
-  optim_method <- args[8]
-  max_iter <- as.integer(args[9])
-  eps_f <- as.numeric(args[10])
-  step_size <- as.numeric(args[11])
-  b1 <- as.numeric(args[12])
+if(length(args) >= 7) {
+  optim_method <- args[7]
 }
 
 model_save_dir <- "fitted_models"
-if(length(args) >= 13) {
-  model_save_dir <- args[13]
+if(length(args) >= 8) {
+  model_save_dir <- args[8]
 }
 
 file_suffix <- NULL
-if (length(args) >= 14) {
-  file_suffix <- args[14]
+if (length(args) >= 9) {
+  file_suffix <- args[9]
+}
+if(iter < 1) {
+  file_suffix <- paste(file_suffix, "MAP", sep="_")
 }
 
-if(!calcGradHess) {
-  file_suffix <- paste(file_suffix, "MAP", sep="_")
+max_iter <- 10000
+eps_f <- 1e-10
+if(length(args) >= 11) {
+  max_iter <- as.integer(args[10])
+  eps_f <- as.numeric(args[11])
+}
+
+step_size <- 0.003
+b1 <- 0.9
+if(length(args) >= 13) {
+  step_size <- as.numeric(args[12])
+  b1 <- as.numeric(args[13])
 }
 
 # data already generated but for reproducible sampling behavior from Stan, optimizer
@@ -99,14 +99,13 @@ writeLines(c("\nUsing parameter values",
              paste("\tQ:",Q),
              paste("\trseed:",rseed),
              paste("\titer:",iter),
-             paste("\tcalcGradHess:",calcGradHess),
              paste("\tmodel:",model),
              paste("\toptim_method:",optim_method),
-             paste("\tstep_size:",step_size),
+             paste("\tsaving to:",model_save_dir),
              paste("\tmax_iter:",max_iter),
-             paste("\tb1:",b1),
              paste("\teps_f:",eps_f),
-             paste("\tsaving to:",model_save_dir)
+             paste("\tstep_size:",step_size),
+             paste("\tb1:",b1)
           ))
 
 # simulation --------------------------------------------------------------
@@ -176,6 +175,11 @@ if(model == 'svbuf') {
   save(fit.svbuf, file=paste(model_save_dir,"/SVBUF_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }
 
+calcGradHess <- TRUE
+if(iter == 0) {
+  calcGradHess <- FALSE
+}
+
 if(model == 'me') {
   # double Mongrel iterations
   iter <- 2L*iter
@@ -186,11 +190,11 @@ if(model == 'me') {
 if(model == 'mc') {
   # double Mongrel iterations
   iter <- 2L*iter
-  fit.mc <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f)
+  fit.mc <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, step_size=step_size, calcGradHess=calcGradHess, max_iter=max_iter, b1=b1, eps_f=eps_f)
   save(fit.mc, file=paste(model_save_dir,"/MC_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep="")) 
 }
 
 if(model == 'mcp') {
-  fit.mcp <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, calcGradHess=calcGradHess, step_size=step_size, max_iter=max_iter, b1=b1, eps_f=eps_f, calcPartialHess=TRUE)
+  fit.mcp <- fit_mongrel(sim_data, decomposition="cholesky", optim_method=optim_method, n_samples=iter, step_size=step_size, calcGradHess=calcGradHess, max_iter=max_iter, b1=b1, eps_f=eps_f, calcPartialHess=TRUE)
   save(fit.mcp, file=paste(model_save_dir,"/MCP_N",N,"_D",D,"_Q",Q,"_R",rseed,file_suffix,".RData",sep=""))
 }

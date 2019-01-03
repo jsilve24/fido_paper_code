@@ -12,27 +12,29 @@ my @Q_vals;
 
 if($#ARGV < 2) {
 	print("Usage: perl generate_runtime_jobs.pl {vary} {cores} {MAP-only}\n");
+	exit;
 }
 
 my $vary = $ARGV[0];
 my $cores = $ARGV[1];
-my $use_MAP = "F";
+my $samples = 2000;
 if($ARGV[2] != 0) {
-	$use_MAP = "T";
+	$samples = 0;
 }
 my $optim = 'lbfgs';
-my $samples = 2000;
+my $model_dir = 'fitted_models_2018-12-30';
 
 open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
 if($vary eq 'test') {
 	# trivial case to test script generation
-	@N_vals = qw(1000);
-	@D_vals = qw(1000);
-	@Q_vals = qw(500);
+	@N_vals = qw(100);
+	@D_vals = qw(30);
+	@Q_vals = qw(5);
 } elsif($vary eq 'N') {
 	# varying N
-	@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
+	#@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
+	@N_vals = qw(750);
 	@D_vals = qw(30);
 	@Q_vals = qw(5);
 } elsif($vary eq 'D') {
@@ -102,7 +104,7 @@ for my $N (@N_vals) {
 					print $fh 'cd /data/mukherjeelab/Mongrel/mongrel_paper_code'."\n\n";
 
 					# extra arguments will be ignored if not needed
-					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' '.$use_MAP.' '.$optim.' 50000 1e-10 0.004 0.99 fitted_models_2018-12-30 '.$file_suffix."\n";
+					print $fh 'srun Rscript simulate_efficiency.R '.$N.' '.$D.' '.$Q.' '.$rep.' '.$m_idx.' '.$samples.' '.$optim.' '.$model_dir.' '.$file_suffix.' 50000 1e-10 0.004 0.99'."\n";
 
 					close $fh;
 
@@ -120,14 +122,14 @@ for my $N (@N_vals) {
 						        }
 						}
 					}
-					if($vary ne 'test') {
+#					if($vary ne 'test') {
 						my $call_str = "sbatch --ntasks=1 --cpus-per-task=$cores --nodelist=$usable_nodes[$rand_n] $filename";
 						print("Calling: ".$call_str."\n");
 						$sys_response = `$call_str`;
 						sleep(1);
 						chomp($sys_response);
 						print $job_listing substr($sys_response,20,length($sys_response))."\tmodel=".uc($m_idx)."\tN=".$N."\tD=".$D."\tQ=".$Q."\tR=".$rep."\n";
-					}
+#					}
 				}
 			}
 		}

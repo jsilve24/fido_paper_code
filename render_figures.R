@@ -17,16 +17,14 @@ exclude_models <- c("conjugate_linear_model",
   "stan_collapsed_variationalbayes_fullrank")
 
 build_color_palette <- function() {
-  my_colors <- brewer.pal(9, "Set1")
+  #my_colors <- brewer.pal(9, "Set1")
+  my_colors <- brewer.pal(6, "Dark2")
   names(my_colors) <- c("mongrel_cholesky",
                         "mongrel_cholesky_MAP",
                         "stan_collapsed",
                         "stan_uncollapsed",
                         "conjugate_linear_model",
-                        "stan_collapsed_variationalbayes_meanfield",
-                        "stan_collapsed_variationalbayes_fullrank",
-                        "stan_uncollapsed_variationalbayes_meanfield",
-                        "stan_uncollapsed_variationalbayes_fullrank")
+                        "stan_collapsed_variationalbayes_meanfield")
   return(scale_colour_manual(name="model", values=my_colors))
 }
 
@@ -91,7 +89,7 @@ render_F1_C1 <- function(dat, use_legend=FALSE) {
 
 # "all models" includes conjugate linear model, Stan variational inference, etc.
 render_F1_C2 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
-  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
+  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen", "mongrel_cholesky_MAP")))
   if(!use_all_models) {
     dat_filtered <- filter(dat_filtered, !(model %in% exclude_models))
   }
@@ -111,7 +109,7 @@ render_F1_C2 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
 }
 
 render_F1_C3 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
-  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen")))
+  dat_filtered <- filter(dat, !(model %in% c("mongrel_eigen", "mongrel_cholesky_MAP")))
   if(!use_all_models) {
     dat_filtered <- filter(dat_filtered, !(model %in% exclude_models))
   }
@@ -171,16 +169,18 @@ render_F1 <- function(use_legend=FALSE) {
   # render without CLM
   c2 <- render_F1_C2(dat, use_legend=FALSE)
   c3 <- render_F1_C3(dat, use_legend=FALSE)
-  c4 <- render_F1_C4(use_legend=FALSE)
-  c5 <- render_F1_C5(use_legend=use_legend)
+  c4 <- render_F1_C4(use_legend=use_legend)
+  #c5 <- render_F1_C5(use_legend=use_legend)
   if(use_legend) {
-    p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 2))
-    # ggsave("figure_drafts/legends/F1.png", plot=p, width=16, height=8, units="in")
-    ggsave("figure_drafts/legends/F1.png", plot=p, width=19, height=8, units="in")
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 2))
+    #p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 2))
+    ggsave("figure_drafts/legends/F1.png", plot=p, width=16, height=8, units="in")
+    #ggsave("figure_drafts/legends/F1.png", plot=p, width=19, height=8, units="in")
   } else {
-    p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 1))
-    # ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")
-    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=12.5, height=6, units="in")
+    p <- ggarrange(c1, c2, c3, c4, ncol=4, nrow=1, widths = c(1, 1, 1, 1))
+    #p <- ggarrange(c1, c2, c3, c4, c5, ncol=5, nrow=1, widths = c(1, 1, 1, 1, 1))
+    ggsave("figure_drafts/no_legends/F1.png", plot=p, width=10, height=6, units="in")
+    #ggsave("figure_drafts/no_legends/F1.png", plot=p, width=12.5, height=6, units="in")
   }
 }
 
@@ -322,13 +322,13 @@ render_S3 <- function(use_legend=FALSE) {
 
 use_l <- TRUE
 render_F1(use_legend=use_l)
-render_S1(use_legend=use_l)
-render_S2(use_legend=use_l)
-render_S3(use_legend=use_l)
+#render_S1(use_legend=use_l)
+#render_S2(use_legend=use_l)
+#render_S3(use_legend=use_l)
 
-use_l <- FALSE
-render_F1(use_legend=use_l)
-render_S1(use_legend=use_l)
-render_S2(use_legend=use_l)
-render_S3(use_legend=use_l)
+#use_l <- FALSE
+#render_F1(use_legend=use_l)
+#render_S1(use_legend=use_l)
+#render_S2(use_legend=use_l)
+#render_S3(use_legend=use_l)
 

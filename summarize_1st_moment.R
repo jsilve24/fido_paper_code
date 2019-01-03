@@ -93,7 +93,7 @@ Q_list <- NULL
 R_list <- c(1, 2, 3)
 
 if(vary == "N") {
-  N_list <- c(1, 3, 5, 10, 20, 30, 50, 100, 250, 500, 750, 1000);
+  N_list <- c(3, 5, 10, 20, 30, 50, 100, 250, 500, 750, 1000);
   D_list <- c(30);
   Q_list <- c(5);
 } else if(vary == "D") {
@@ -119,7 +119,6 @@ for (m in model_list) {
     for (d in D_list) {
       for (q in Q_list) {
         for (r in R_list) {
-          cat("Checking",m,"N=",n,"D=",d,"Q=",q,"R=",r,"...\n")
           if(vary == "N") {
             sweep_param_value <- n
           } else if(vary == "D") {
@@ -128,6 +127,7 @@ for (m in model_list) {
             sweep_param_value <- q
           }
           destfile <- paste("simulated_data/N",n,"_D",d,"_Q",q,"_R",r,".RData", sep="")
+          cat("Loading data file '",destfile,"'\n")
           if(file.exists(destfile)){
             # percent zero
             load(destfile)
@@ -141,7 +141,8 @@ for (m in model_list) {
           if(m == "MC_MAP") {
             destfile <- paste(model_dir,"/MC_N",n,"_D",d,"_Q",q,"_R",r,MKL_suffix,"_MAP.RData", sep="")
           }
-          if (file.exists(destfile)){
+          cat("Loading fit file '",destfile,"'\n")
+          if(file.exists(destfile)){
             load(destfile)
             if (m == "SU") {
               write_Stan_out(fit.su, "stan_uncollapsed")
