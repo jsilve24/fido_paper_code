@@ -82,7 +82,7 @@ render_F1_C1 <- function(dat, use_legend=FALSE) {
     geom_smooth(method="loess", se=FALSE, color="black") +
     scale_x_log10() +
     ylim(0, 1) +
-    ylab("percent zeros")
+    ylab("Percent Zeros")
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -103,7 +103,7 @@ render_F1_C2 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
       breaks = scales::trans_breaks("log10", function(x) 10^x),
       labels = scales::trans_format("log10", scales::math_format(10^.x))
     ) +
-    ylab("second per effective sample size")
+    ylab("Seconds per Effective Sample (SpES)")
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -118,7 +118,8 @@ render_F1_C3 <- function(dat, use_all_models=FALSE, use_legend=FALSE) {
     geom_point() +
     geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
-    ylab(expression(paste("RMSE ",Lambda,sep="")[ij]))
+    ylab("RMSE of Regression Coefficients")
+    #ylab(expression(paste("RMSE ",Lambda,sep="")[ij]))
   p <- apply_common_settings(p, use_legend=use_legend)
   return(p)
 }
@@ -136,7 +137,7 @@ render_F1_C4 <- function(use_all_models=FALSE, use_legend=FALSE, Q_only=FALSE) {
     geom_point() +
     geom_smooth(method="loess", se=FALSE) +
     scale_x_log10() +
-    ylab("RMSE of deviation")
+    ylab("RMSE of Standard Deviation of Regression Coefficients")
 
   p <- apply_common_settings(p, use_legend=use_legend, share_y=TRUE)
   return(p)

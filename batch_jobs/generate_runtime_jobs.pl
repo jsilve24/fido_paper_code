@@ -22,7 +22,8 @@ if($ARGV[2] != 0) {
 	$samples = 0;
 }
 my $optim = 'lbfgs';
-my $model_dir = 'fitted_models_2018-12-30';
+#my $model_dir = 'fitted_models_2018-12-30';
+my $model_dir = 'batch_jobs';
 
 open(my $job_listing, '>>', 'job_listing_'.$vary.'.txt');
 
@@ -30,7 +31,7 @@ if($vary eq 'test') {
 	# trivial case to test script generation
 	@N_vals = qw(100);
 	@D_vals = qw(30);
-	@Q_vals = qw(5);
+	@Q_vals = qw(500);
 } elsif($vary eq 'N') {
 	# varying N
 	@N_vals = qw(1 3 5 10 20 30 50 100 250 500 750 1000);
@@ -122,7 +123,7 @@ for my $N (@N_vals) {
 						}
 					}
 #					if($vary ne 'test') {
-						my $call_str = "sbatch --ntasks=1 --cpus-per-task=$cores --nodelist=$usable_nodes[$rand_n] $filename";
+						my $call_str = "sbatch --cpus-per-task=$cores --nodelist=$usable_nodes[$rand_n] $filename";
 						print("Calling: ".$call_str."\n");
 						$sys_response = `$call_str`;
 						sleep(1);
