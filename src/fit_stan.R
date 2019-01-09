@@ -88,7 +88,6 @@ fit_mstan <- function(mdataset, chains=4, iter=2000,
   return(m)
 }
 
-
 #' Fit multinomial model using stan variational inference
 #' 
 #' WARNING: Req that your current working directory is main folder
