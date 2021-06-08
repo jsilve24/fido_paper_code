@@ -1,7 +1,7 @@
 # fido_paper
 Code and Analysis for the fido Paper
 
-Note, fido was renamed from stray. 
+Note, fido was renamed from stray which was renamed from mongrel. 
 
 
 # Working Notes
