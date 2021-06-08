@@ -1,5 +1,7 @@
-# mongrel_paper
-Code and Analysis for the Mongrel Paper
+# fido_paper
+Code and Analysis for the fido Paper
+
+Note, fido was renamed from stray. 
 
 
 # Working Notes
