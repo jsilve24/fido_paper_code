@@ -1,11 +1,11 @@
 library(tidyverse)
 library(phyloseq)
 library(MicrobeDS)
-library(mongrel)
+library(stray)
 
 set.seed(899)
 
-setwd("~/Research/mongrel/mongrel_paper_code/") # Sorry for hardcoding this!
+setwd("~/Research/mongrel/stray_paper_code/") # Sorry for hardcoding this!
 
 
 source("src/fit_methods.R")
